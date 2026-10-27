@@ -1,0 +1,21 @@
+@if (doc(); as d) {
+  <div class="modal" (click)="onBackdrop($event)">
+    <div class="dialog" [class.max]="max()">
+      <div class="mbar on-chrome">
+        <span class="mt"><app-icon name="file-text" [size]="16" /><span class="mt-name">{{ d.name }}</span></span>
+        <span class="mbtns">
+          <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" (click)="toggleMax()"
+                  [attr.aria-label]="max() ? 'Verkleinern' : 'Vergrößern'">
+            <app-icon [name]="max() ? 'minimize' : 'maximize'" /> {{ max() ? 'Verkleinern' : 'Vergrößern' }}
+          </button>
+          <button type="button" class="ui-btn ui-btn--primary ui-btn--sm" (click)="close.emit()">
+            <app-icon name="x" /> Schließen
+          </button>
+        </span>
+      </div>
+      <app-pdf-pane [docId]="d.id" [rotate]="roter.angle()" [canRotate]="d.canRotate" (rotateClick)="onRotate()" />
+      <!-- Rotation-save failure, floated just above the pill; the view has already snapped back to the last-saved angle. -->
+      @if (roter.error(); as err) { <div class="rot-error" role="alert">{{ err }}</div> }
+    </div>
+  </div>
+}

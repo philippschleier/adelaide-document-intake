@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Adelaide.Core\Adelaide.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Core" Version="1.58.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
+    <PackageReference Include="PDFtoImage" Version="5.2.1" />
+    <PackageReference Include="ZXingCpp" Version="0.5.2" /><!-- native zxing-cpp: ~9x stronger DataMatrix decode; ships linux-x64 + win-x64 -->
+    <PackageReference Include="PdfSharp" Version="6.2.0" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" /><!-- transitive pin (via PdfSharp) past CVE-2026-84008 / GHSA-846f-f764-76mx --><!-- pure-managed PDF page ops: lossless /Rotate (Phase 1); no native/linux-x64 risk on the Docker target -->
+    <!-- Bans the unsafe ZXingCpp ImageView(ReadOnlySpan<byte>) ctor (see BannedSymbols.txt + .editorconfig RS0030=error). -->
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

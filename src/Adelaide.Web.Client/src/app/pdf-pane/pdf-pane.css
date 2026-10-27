@@ -1,0 +1,82 @@
+/* Fills whatever pane hosts it (modal body, compare pane, review doc pane) — the host sets the size, we fill it. */
+:host { display: flex; flex: 1; min-height: 0; min-width: 0; }
+.pp { position: relative; flex: 1; display: flex; min-height: 0; min-width: 0; background: var(--ui-chrome-2); }
+
+/* The scrolling page column. position:relative so page slots' offsetTop is measured against THIS element (scroll-spy
+   + scrollToPage rely on it). */
+/* overflow-x auto so a zoomed-in page (wider than the pane) can scroll horizontally. */
+.scroller { flex: 1; position: relative; overflow-y: auto; overflow-x: auto; background: var(--ui-chrome-2); }
+/* safe center: a page wider than the column (zoom > 1) aligns to start instead of centre, so its left edge stays reachable by the h-scroll. */
+.col { display: flex; flex-direction: column; align-items: safe center; gap: 14px; padding: 14px 16px; }
+
+/* Each page is a fixed-aspect BOX (default A4 portrait; the real aspect is pinned inline once the image loads, so a
+   rotated/odd page fills it without letterboxing). A constant box height means the sliding-window release/reactivate
+   and the skeleton→image swap never shift the scroll position. The image fills the box (contain). Width = fit (≤1000px)
+   × the zoom factor; flex:0 0 auto so the box keeps its aspect-derived height in the flex column. */
+.pg {
+  position: relative; flex: 0 0 auto; width: calc(min(100%, 1600px) * var(--zoom, 1)); aspect-ratio: 1 / 1.414;
+  background: var(--ui-card); border-radius: var(--r-control); overflow: hidden; box-shadow: 0 6px 22px rgba(0, 0, 0, .28);
+}
+.pgimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .15s ease; }
+.pgimg.on { opacity: 1; }
+
+/* Per-page loading skeleton — fills the page box; same shimmer language as the whole-pane skeleton. */
+.pgskel { position: absolute; inset: 0; background: var(--ui-line); overflow: hidden; }
+.pgskel::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .10) 50%, transparent 70%);
+  transform: translateX(-100%); animation: pgshimmer 1.3s ease-in-out infinite;
+}
+@keyframes pgshimmer { to { transform: translateX(100%); } }
+
+/* Per-page error (one page failing never blanks the document) — retry re-requests just this page. */
+.pgerr {
+  position: absolute; inset: 0; display: flex; flex-direction: column; gap: .55rem;
+  align-items: center; justify-content: center; text-align: center; padding: 1rem;
+  color: var(--ui-err); font-size: var(--font-body-size); background: var(--ui-card);
+}
+
+/* Small page-number badge, bottom-right — orientation while scrolling a long stack. */
+.pgnum {
+  position: absolute; right: 8px; bottom: 8px; z-index: 1;
+  min-width: 1.5rem; padding: .1rem .4rem; border-radius: 999px;
+  font-size: var(--font-caption-size); font-variant-numeric: tabular-nums; text-align: center;
+  color: #fff; background: rgba(0, 0, 0, .55);
+}
+
+/* Viewer controls pill — bottom-CENTRE (bottom-left collided with the page end / next-page boundary in continuous
+   scroll). Light surface + hairline border, fully rounded, floating over the dark viewer ground. Fades when idle;
+   returns on pointer-over-pane (hover) and keyboard focus (focus-within). */
+.viewerbar {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 3;
+  display: flex; align-items: center; gap: 2px; padding: 3px;
+  background: var(--ui-card); border: 1px solid var(--ui-line); border-radius: 999px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .22); opacity: .45; transition: opacity .15s ease;
+}
+.pp:hover .viewerbar, .viewerbar:focus-within { opacity: 1; }
+.vbtn, .vlvl {
+  border: 0; background: transparent; color: var(--ui-ink-soft); cursor: pointer; font: inherit;
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 999px;
+}
+.vbtn { width: 30px; height: 30px; }
+.vbtn:hover:not(:disabled) { background: var(--ui-line-soft); }
+.vbtn:disabled { opacity: .4; cursor: default; }
+.vlvl { height: 30px; padding: 0 .3rem; font-size: var(--font-caption-size); }
+.vlvl:hover { background: var(--ui-line-soft); }
+/* Fixed-width readout: a hidden "400 %" sizer reserves the exact width; the live value renders centred over it — the
+   pill never jitters as the percentage changes width (no guessed min-width). tabular-nums so digits don't vary either. */
+.zoomval { display: inline-grid; justify-items: center; font-variant-numeric: tabular-nums; }
+.zoomval > * { grid-area: 1 / 1; }
+.zoomval-sizer { visibility: hidden; }
+.vdiv { width: 1px; height: 18px; background: var(--ui-line); margin: 0 3px; }
+.vbtn:focus-visible, .vlvl:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+
+/* NOT-FOUND (neutral) vs FAILED (error-tinted + retry) — deliberately distinct from each other AND from loading;
+   a bare grey rectangle cannot occur. */
+.ppmsg {
+  margin: auto; padding: 1.6rem; max-width: 34rem; text-align: center; font-size: var(--font-body-size);
+  display: flex; flex-direction: column; gap: .7rem; align-items: center;
+}
+.ppmsg .glyph { opacity: .85; }
+.ppmsg.nf { color: var(--ui-chrome-muted); }
+.ppmsg.err { color: #ffd8d5; }

@@ -1,0 +1,12 @@
+Copyright (c) 2026 Philipp Schleier. All rights reserved.
+
+This repository is published so that its source code can be read and evaluated, for example as part of a
+professional portfolio or a hiring process. No license is granted to copy, modify, distribute, sublicense, or use
+the code, in whole or in part, for any other purpose without the copyright holder's prior written permission.
+
+Third-party components referenced by this project (NuGet and npm packages) are not part of this copyright and remain
+under their own licenses; see THIRD-PARTY-NOTICES.md.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. IT IS NOT A MEDICAL DEVICE AND
+MUST NOT BE USED TO PROCESS REAL PATIENT DATA WITHOUT THE ORGANISATIONAL, LEGAL AND TECHNICAL SAFEGUARDS THAT SUCH
+PROCESSING REQUIRES.

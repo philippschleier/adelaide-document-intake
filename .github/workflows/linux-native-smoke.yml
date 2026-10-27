@@ -1,0 +1,41 @@
+name: linux-native-smoke
+
+# Proves the three bundled Linux natives — libSkiaSharp.so, libpdfium.so, libe_sqlite3.so — actually dlopen + execute
+# on Linux, on the image we DEPLOY. Runs every push/PR, so it's a standing regression guard: a future PDFtoImage /
+# SkiaSharp bump that changes the bundled natives, or a base-image update that drops a system lib, fails HERE at build
+# rather than in production. A Windows cross-publish cannot surface a Linux dlopen failure — this is what earns "proven".
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  native-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish smoke (framework-dependent, linux-x64)
+        run: >
+          dotnet publish tools/Adelaide.LinuxSmoke/Adelaide.LinuxSmoke.csproj
+          -c Release -r linux-x64 --self-contained false
+          -o tools/Adelaide.LinuxSmoke/publish
+
+      # Secondary / convenience: the runner's full Ubuntu userland (has fontconfig + many libs). Proves the natives load
+      # on a full Linux — but NOT necessarily on the slim image we ship. Faster pre-check.
+      - name: Smoke on the runner (ubuntu-latest — secondary)
+        run: dotnet tools/Adelaide.LinuxSmoke/publish/Adelaide.LinuxSmoke.dll
+
+      # Authoritative: the EXACT runtime base image we deploy. A pass here is what earns "Linux-ready". A pass on the
+      # runner above but a FAIL here means the deploy image lacks a system lib (e.g. libfontconfig1) — add it to the
+      # Dockerfile. This step also validates the Dockerfile itself (docker build + run).
+      - name: Smoke in the deploy base image (aspnet:10.0 — authoritative)
+        run: |
+          docker build -t adelaide-linux-smoke tools/Adelaide.LinuxSmoke
+          docker run --rm adelaide-linux-smoke

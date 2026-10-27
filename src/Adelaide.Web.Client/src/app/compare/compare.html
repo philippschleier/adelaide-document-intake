@@ -1,0 +1,67 @@
+@if (loading()) {
+  <div class="center">Lädt…</div>
+} @else if (error()) {
+  <div class="center"><div><p>{{ error() }}</p><a routerLink="/"><app-icon name="arrow-left" /> Zurück zur Übersicht</a></div></div>
+} @else if (info(); as d) {
+  <div class="cmp">
+    <div class="bar on-chrome">
+      <span class="left">
+        @if (fromReview()) {
+          <a [routerLink]="['/review', id()]" class="back"><app-icon name="arrow-left" /> Zurück zur Prüfung</a>
+        } @else {
+          <a routerLink="/" class="back"><app-icon name="arrow-left" /> Übersicht</a>
+        }
+        <span class="title">Dokumentvergleich</span>
+      </span>
+      <span class="right">
+        <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" (click)="toggleDiff()">
+          <app-icon name="columns" /> {{ showDiff() ? 'Pixel-Diff ausblenden' : 'Pixel-Diff anzeigen' }}
+        </button>
+        @if (isSuspect()) {
+          <button type="button" class="ui-btn ui-btn--secondary ui-btn--sm" [disabled]="acting()" (click)="processAnyway()">Trotzdem verarbeiten</button>
+        }
+        @if (canDiscard()) {
+          <button type="button" class="ui-btn ui-btn--danger ui-btn--sm" [disabled]="acting()" (click)="discard()">Als Duplikat verwerfen</button>
+        }
+        @if (canSupersede()) {
+          <button type="button" class="ui-btn ui-btn--warn ui-btn--sm" [disabled]="acting()" (click)="supersede()">Vorhandenes ersetzen…</button>
+        } @else if (supersedeBlockedLegacy()) {
+          <button type="button" class="ui-btn ui-btn--warn ui-btn--sm" disabled title="Backfill erforderlich: dem vorhandenen Dokument fehlt der SharePoint-Locator (driveItemId).">Ersetzen (Backfill erforderlich)</button>
+        }
+      </span>
+    </div>
+
+    @if (actionError()) { <div class="errline">{{ actionError() }}</div> }
+
+    <div class="panes">
+      <!-- Each pane owns its states independently (skeleton+progress → PDF, or designed not-found/failed) — one
+           pane failing never blocks the other. available=false short-circuits straight to the placeholder text. -->
+      <div class="pane">
+        <div class="plabel new">Neu hochgeladen: {{ d.a.original || d.a.documentId }} <span class="sub">{{ d.a.contentType || '' }}</span></div>
+        <app-pdf-pane [docId]="id()" [rotate]="aRotation()" [missing]="d.a.available === false"
+                      notFoundText="Original-PDF liegt nicht mehr vor." />
+      </div>
+      <div class="pane">
+        <div class="plabel">Bereits vorhanden: {{ d.b.original || d.b.documentId }} <span class="sub">{{ d.b.contentType || '' }}</span></div>
+        <app-pdf-pane [docId]="other()" [rotate]="bRotation()" [missing]="d.b.available === false"
+                      notFoundText="Vorhandenes Dokument nicht in SharePoint gefunden (evtl. gelöscht) — das neue Dokument kann als eigenständig abgelegt werden." />
+      </div>
+      @if (showDiff()) {
+        <div class="pane">
+          <div class="plabel diffl on-chrome">
+            <span>Pixel-Diff <span class="legend"><span class="sw"></span> Unterschied</span></span>
+            <span class="pager">
+              <button type="button" class="ui-icon-btn" (click)="prevPage()" [disabled]="page() === 1" aria-label="Vorherige Seite"><app-icon name="chevron-left" /></button>
+              Seite {{ page() }}
+              <button type="button" class="ui-icon-btn" (click)="nextPage()" aria-label="Nächste Seite"><app-icon name="chevron-right" /></button>
+            </span>
+          </div>
+          <div class="diffbody">
+            <img [src]="diffSrc()" (error)="onDiffError()" alt="Pixel-Diff" />
+            @if (diffNote()) { <div class="note">{{ diffNote() }}</div> }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}

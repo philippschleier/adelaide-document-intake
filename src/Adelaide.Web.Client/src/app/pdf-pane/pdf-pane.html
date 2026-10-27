@@ -1,0 +1,60 @@
+<div class="pp on-chrome">
+  @if (state() === 'notfound') {
+    <div class="ppmsg nf">
+      <div class="glyph"><app-icon name="file-text" [size]="30" /></div>
+      <div>{{ notFoundText() }}</div>
+    </div>
+  } @else if (state() === 'failed') {
+    <div class="ppmsg err">
+      <div class="glyph"><app-icon name="alert-triangle" [size]="30" /></div>
+      <div>Laden fehlgeschlagen.</div>
+      <button class="ui-btn ui-btn--secondary ui-btn--sm" type="button" (click)="retry()"><app-icon name="refresh" /> Erneut versuchen</button>
+    </div>
+  } @else if (state() === 'loading') {
+    <!-- Page count resolving — one A4-portrait skeleton so the pane is never a bare grey rectangle. -->
+    <div class="scroller"><div class="col"><div class="pg"><div class="pgskel"></div></div></div></div>
+  } @else {
+    <!-- READY: the scrollable page column. Each page lazily rasterizes as it nears the viewport (#pgSlot), with its
+         own skeleton→image cross-fade and per-page error+retry — one page failing never blanks the whole document. -->
+    <div class="scroller" #scroller (scroll)="onScroll()">
+      <div class="col" [style.--zoom]="zoom()">
+        @for (p of pages(); track p) {
+          <!-- The slot reserves an A4-portrait box until the page loads, then pins the page's REAL aspect-ratio — so a
+               rotated/odd page isn't letterboxed and releasing a page (sliding window) never shifts the scroll. -->
+          <div class="pg" #pgSlot [style.aspect-ratio]="aspectFor(p)">
+            @if (isErrored(p)) {
+              <div class="pgerr">
+                <app-icon name="alert-triangle" [size]="20" />
+                <span>Seite {{ p }} konnte nicht geladen werden.</span>
+                <button class="ui-btn ui-btn--ghost ui-btn--sm" type="button" (click)="retryPage(p)"><app-icon name="refresh" /> Erneut</button>
+              </div>
+            } @else {
+              @if (isActive(p)) {
+                <img class="pgimg" [class.on]="isLoaded(p)" [src]="pageSrc(p)" [alt]="'Seite ' + p"
+                     (load)="onImgLoad(p, $any($event.target))" (error)="onImgError(p)" />
+              }
+              @if (!isLoaded(p)) { <div class="pgskel"></div> }
+            }
+            <span class="pgnum">{{ p }}</span>
+          </div>
+        }
+      </div>
+    </div>
+    <!-- Viewer controls pill — bottom-centre, over the page: zoom (−/reset/+, also Ctrl+scroll) always; a single
+         clockwise rotate only when the parent enables it (review flow). Icons only; no labels, no readout. -->
+    <div class="viewerbar">
+      <button type="button" class="vbtn" (click)="zoomOut()" [disabled]="!canZoomOut()" aria-label="Verkleinern"><app-icon name="minus" [size]="16" /></button>
+      <button type="button" class="vlvl" (click)="resetZoom()" title="Zoom zurücksetzen (100 %)">
+        <span class="zoomval">
+          <span class="zoomval-sizer" aria-hidden="true">400 %</span>
+          <span class="zoomval-live">{{ zoomPct() }} %</span>
+        </span>
+      </button>
+      <button type="button" class="vbtn" (click)="zoomIn()" [disabled]="!canZoomIn()" aria-label="Vergrößern"><app-icon name="plus" [size]="16" /></button>
+      @if (canRotate()) {
+        <span class="vdiv" aria-hidden="true"></span>
+        <button type="button" class="vbtn" (click)="rotateClick.emit()" aria-label="Nach rechts drehen" title="Nach rechts drehen"><app-icon name="rotate-cw" [size]="16" /></button>
+      }
+    </div>
+  }
+</div>

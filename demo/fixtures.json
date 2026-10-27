@@ -1,0 +1,587 @@
+{
+  "documents": [
+    {
+      "file": "01-verordnung-mustermann.pdf",
+      "sha256": "0b0a19499f31f696a85348b7134cd8f59b35b715e5d1e093ad4913372646198d",
+      "scenario": "Clean Verordnung (home-care prescription): valid KVNR matches exactly one patient, every required field present, type is on the auto-file allowlist \u2192 AUTO-FILED.",
+      "legibility": 0.96,
+      "pages": [
+        "SYNTHETISCHES MUSTERDOKUMENT - fiktive Daten, keine echte Person, Einrichtung oder Kasse\n\nPraxis Dr. med. Beispiel (fiktiv) \u00B7 Allgemeinmedizin \u00B7 Musterstra\u00DFe 1 \u00B7 12345 Musterstadt\n\n# Verordnung h\u00E4uslicher Krankenpflege\n\n**Krankenkasse:** Musterkasse (fiktiv)\n\n**Name, Vorname:** Mustermann, Max\n\n**geb. am:** 29.05.1956\n\n**Versicherten-Nr.:** Z000000005\n\n[X] Erstverordnung\n\n[ ] Folgeverordnung\n\n**Zeitraum:** vom 01.10.2026 bis 31.12.2026\n\nBehandlungspflege: Medikamentengabe 2x t\u00E4glich; Anziehen von Kompressionsstr\u00FCmpfen beidseits.\n\n**Ausstellungsdatum:** 28.09.2026\n\nUnterschrift und Stempel des Arztes (fiktiv)"
+      ],
+      "fields": [
+        {
+          "name": "Domain",
+          "value": "Medical",
+          "confidence": 0.99,
+          "source": "vision"
+        },
+        {
+          "name": "ContentType",
+          "value": "Verordnung",
+          "confidence": 0.97,
+          "source": "vision/verified"
+        },
+        {
+          "name": "KVNR",
+          "value": "Z000000005",
+          "confidence": 0.97,
+          "source": "vision"
+        },
+        {
+          "name": "LastName",
+          "value": "Mustermann",
+          "confidence": 0.98,
+          "source": "vision"
+        },
+        {
+          "name": "FirstName",
+          "value": "Max",
+          "confidence": 0.98,
+          "source": "vision"
+        },
+        {
+          "name": "BirthDate",
+          "value": "1956-05-29",
+          "confidence": 0.96,
+          "source": "vision"
+        },
+        {
+          "name": "DocumentDate",
+          "value": "2026-09-28",
+          "confidence": 0.95,
+          "source": "vision"
+        },
+        {
+          "name": "ValidFrom",
+          "value": "2026-10-01",
+          "confidence": 0.94,
+          "source": "vision"
+        },
+        {
+          "name": "ValidUntil",
+          "value": "2026-12-31",
+          "confidence": 0.94,
+          "source": "vision"
+        },
+        {
+          "name": "PrescriptionOrder",
+          "value": "Erstverordnung",
+          "confidence": 0.96,
+          "source": "di"
+        }
+      ]
+    },
+    {
+      "file": "02-genehmigung-beispiel.pdf",
+      "sha256": "9b5c5ff396b00fd2da6a31083142f8148702650d9af164b3a21568f2635bc368",
+      "scenario": "Payer approval (Genehmigung) for a valid KVNR \u2192 AUTO-FILED. Upload it a second time to see the exact-bytes (SHA-256) duplicate hold.",
+      "legibility": 0.95,
+      "pages": [
+        "SYNTHETISCHES MUSTERDOKUMENT - fiktive Daten, keine echte Person, Einrichtung oder Kasse\n\nMusterkasse \u2013 Die fiktive Gesundheitskasse \u00B7 Postfach 10 00 00 \u00B7 12345 Musterstadt\n\n# Genehmigung h\u00E4uslicher Krankenpflege\n\n**Versicherte:** Anna Beispiel, geb. 17.03.1939\n\n**Versicherten-Nr.:** T000000002\n\n**Genehmigungsnummer:** GEN-2026-000123\n\nDie \u00E4rztliche Verordnung vom 15.09.2026 genehmigen wir wie verordnet f\u00FCr den Zeitraum 01.10.2026 bis 31.12.2026.\n\n**Datum:** 22.09.2026\n\nMusterkasse (fiktiv) \u2013 Leistungsabteilung"
+      ],
+      "fields": [
+        {
+          "name": "Domain",
+          "value": "Medical",
+          "confidence": 0.99,
+          "source": "vision"
+        },
+        {
+          "name": "ContentType",
+          "value": "Genehmigung",
+          "confidence": 0.96,
+          "source": "vision/verified"
+        },
+        {
+          "name": "KVNR",
+          "value": "T000000002",
+          "confidence": 0.97,
+          "source": "vision"
+        },
+        {
+          "name": "LastName",
+          "value": "Beispiel",
+          "confidence": 0.97,
+          "source": "vision"
+        },
+        {
+          "name": "FirstName",
+          "value": "Anna",
+          "confidence": 0.97,
+          "source": "vision"
+        },
+        {
+          "name": "BirthDate",
+          "value": "1939-03-17",
+          "confidence": 0.95,
+          "source": "vision"
+        },
+        {
+          "name": "DocumentDate",
+          "value": "2026-09-22",
+          "confidence": 0.94,
+          "source": "vision"
+        },
+        {
+          "name": "ApprovalNumber",
+          "value": "GEN-2026-000123",
+          "confidence": 0.93,
+          "source": "vision"
+        },
+        {
+          "name": "ApprovalOutcome",
+          "value": "Wie verordnet",
+          "confidence": 0.92,
+          "source": "vision"
+        },
+        {
+          "name": "ValidFrom",
+          "value": "2026-10-01",
+          "confidence": 0.93,
+          "source": "vision"
+        },
+        {
+          "name": "ValidUntil",
+          "value": "2026-12-31",
+          "confidence": 0.93,
+          "source": "vision"
+        }
+      ]
+    },
+    {
+      "file": "03-genehmigung-beispiel-fax-kopie.pdf",
+      "sha256": "fbb3568147667ffeb90e199c0b039bfe4d0f8ee6c3385abc8c8b4f51b74985d5",
+      "scenario": "The same approval arriving again by fax: different bytes, but the same patient \u002B type \u002B date \u002B period \u2192 layer-2 business-key duplicate \u2192 REVIEW with side-by-side compare. Process 02 first.",
+      "legibility": 0.88,
+      "pages": [
+        "SYNTHETISCHES MUSTERDOKUMENT - fiktive Daten, keine echte Person, Einrichtung oder Kasse\n\nFAX  22.09.2026 14:02  Musterkasse (fiktiv)  S. 1/1\n\nMusterkasse \u2013 Die fiktive Gesundheitskasse \u00B7 Postfach 10 00 00 \u00B7 12345 Musterstadt\n\n# Genehmigung h\u00E4uslicher Krankenpflege\n\n**Versicherte:** Anna Beispiel, geb. 17.03.1939\n\n**Versicherten-Nr.:** T000000002\n\n**Genehmigungsnummer:** GEN-2026-000123\n\nDie \u00E4rztliche Verordnung vom 15.09.2026 genehmigen wir wie verordnet f\u00FCr den Zeitraum 01.10.2026 bis 31.12.2026.\n\n**Datum:** 22.09.2026\n\nMusterkasse (fiktiv) \u2013 Leistungsabteilung"
+      ],
+      "fields": [
+        {
+          "name": "Domain",
+          "value": "Medical",
+          "confidence": 0.99,
+          "source": "vision"
+        },
+        {
+          "name": "ContentType",
+          "value": "Genehmigung",
+          "confidence": 0.96,
+          "source": "vision/verified"
+        },
+        {
+          "name": "KVNR",
+          "value": "T000000002",
+          "confidence": 0.97,
+          "source": "vision"
+        },
+        {
+          "name": "LastName",
+          "value": "Beispiel",
+          "confidence": 0.97,
+          "source": "vision"
+        },
+        {
+          "name": "FirstName",
+          "value": "Anna",
+          "confidence": 0.97,
+          "source": "vision"
+        },
+        {
+          "name": "BirthDate",
+          "value": "1939-03-17",
+          "confidence": 0.95,
+          "source": "vision"
+        },
+        {
+          "name": "DocumentDate",
+          "value": "2026-09-22",
+          "confidence": 0.94,
+          "source": "vision"
+        },
+        {
+          "name": "ApprovalNumber",
+          "value": "GEN-2026-000123",
+          "confidence": 0.93,
+          "source": "vision"
+        },
+        {
+          "name": "ApprovalOutcome",
+          "value": "Wie verordnet",
+          "confidence": 0.92,
+          "source": "vision"
+        },
+        {
+          "name": "ValidFrom",
+          "value": "2026-10-01",
+          "confidence": 0.93,
+          "source": "vision"
+        },
+        {
+          "name": "ValidUntil",
+          "value": "2026-12-31",
+          "confidence": 0.93,
+          "source": "vision"
+        }
+      ]
+    },
+    {
+      "file": "04-arztbrief-musterfrau.pdf",
+      "sha256": "b9f93e5fb05d8d507ea80873ac7bae295d0c81ae845213eb3ece893a71423064",
+      "scenario": "Hospital discharge letter with no KVNR: matched by surname \u002B date of birth; Arztbrief is not on the auto-file allowlist \u2192 REVIEW with the patient pre-selected.",
+      "legibility": 0.93,
+      "pages": [
+        "SYNTHETISCHES MUSTERDOKUMENT - fiktive Daten, keine echte Person, Einrichtung oder Kasse\n\nKlinikum Beispielstadt (fiktiv) \u00B7 Klinik f\u00FCr Orthop\u00E4die \u00B7 Klinikweg 2 \u00B7 12345 Musterstadt\n\n# Entlassbrief\n\n**Patientin:** Erika Musterfrau, geb. 02.11.1948\n\n**Aufenthalt:** 21.09.2026 \u2013 04.10.2026\n\nDiagnose: Zustand nach H\u00FCft-TEP rechts (fiktiver Befund). Weiterbehandlung: Wundkontrolle, Mobilisation, Thromboseprophylaxe.\n\n**Datum:** 05.10.2026\n\nMit freundlichen Gr\u00FC\u00DFen \u2013 Dr. med. Muster (fiktiv), Oberarzt"
+      ],
+      "fields": [
+        {
+          "name": "Domain",
+          "value": "Medical",
+          "confidence": 0.99,
+          "source": "vision"
+        },
+        {
+          "name": "ContentType",
+          "value": "Arztbrief",
+          "confidence": 0.93,
+          "source": "vision/verified"
+        },
+        {
+          "name": "LastName",
+          "value": "Musterfrau",
+          "confidence": 0.95,
+          "source": "vision"
+        },
+        {
+          "name": "FirstName",
+          "value": "Erika",
+          "confidence": 0.95,
+          "source": "vision"
+        },
+        {
+          "name": "BirthDate",
+          "value": "1948-11-02",
+          "confidence": 0.94,
+          "source": "vision"
+        },
+        {
+          "name": "DocumentDate",
+          "value": "2026-10-05",
+          "confidence": 0.92,
+          "source": "vision"
+        },
+        {
+          "name": "IssuingFacility",
+          "value": "Krankenhaus",
+          "confidence": 0.9,
+          "source": "vision"
+        }
+      ]
+    },
+    {
+      "file": "05-arztbrief-testfall-namensgleich.pdf",
+      "sha256": "78eb275c73e7ba7646805f5cb8c618a214ad67253184215b3b5fd95ba590c5e2",
+      "scenario": "Letter for \u0027Klara Testfall, 20.02.1944\u0027 \u2014 two different active patients share that name and birth date \u2192 AMBIGUOUS \u2192 REVIEW with both candidates offered; nothing is guessed.",
+      "legibility": 0.92,
+      "pages": [
+        "SYNTHETISCHES MUSTERDOKUMENT - fiktive Daten, keine echte Person, Einrichtung oder Kasse\n\nPraxis f\u00FCr Kardiologie Dr. med. Probe (fiktiv) \u00B7 Herzweg 3 \u00B7 12345 Musterstadt\n\n# Befundbericht\n\n**Patientin:** Klara Testfall, geb. 20.02.1944\n\nLangzeit-EKG ohne pathologischen Befund (fiktiv). Kontrolle in 6 Monaten.\n\n**Datum:** 07.10.2026"
+      ],
+      "fields": [
+        {
+          "name": "Domain",
+          "value": "Medical",
+          "confidence": 0.99,
+          "source": "vision"
+        },
+        {
+          "name": "ContentType",
+          "value": "Arztbrief",
+          "confidence": 0.91,
+          "source": "vision/verified"
+        },
+        {
+          "name": "LastName",
+          "value": "Testfall",
+          "confidence": 0.94,
+          "source": "vision"
+        },
+        {
+          "name": "FirstName",
+          "value": "Klara",
+          "confidence": 0.94,
+          "source": "vision"
+        },
+        {
+          "name": "BirthDate",
+          "value": "1944-02-20",
+          "confidence": 0.93,
+          "source": "vision"
+        },
+        {
+          "name": "DocumentDate",
+          "value": "2026-10-07",
+          "confidence": 0.92,
+          "source": "vision"
+        },
+        {
+          "name": "IssuingFacility",
+          "value": "Praxis",
+          "confidence": 0.88,
+          "source": "vision"
+        }
+      ]
+    },
+    {
+      "file": "06-verordnung-kvnr-pruefziffer.pdf",
+      "sha256": "371469bcb1099217176e28d6a4a4c36eb00d12ee14cac92a194cb2b04840f767",
+      "scenario": "Prescription whose KVNR was read with a wrong check digit: the invalid number is never looked up; name \u002B DOB resolves to the single ACTIVE record of two; the failed check digit still forces REVIEW.",
+      "legibility": 0.81,
+      "pages": [
+        "SYNTHETISCHES MUSTERDOKUMENT - fiktive Daten, keine echte Person, Einrichtung oder Kasse\n\nPraxis Dr. med. Beispiel (fiktiv) \u00B7 Allgemeinmedizin \u00B7 Musterstra\u00DFe 1 \u00B7 12345 Musterstadt\n\n# Verordnung h\u00E4uslicher Krankenpflege\n\n**Name, Vorname:** Probe, Paul\n\n**geb. am:** 01.01.1960\n\n**Versicherten-Nr.:** P444444445\n\n[ ] Erstverordnung\n\n[X] Folgeverordnung\n\n**Zeitraum:** vom 01.11.2026 bis 31.01.2027\n\nBehandlungspflege: Blutzuckermessung 1x t\u00E4glich.\n\n**Ausstellungsdatum:** 20.10.2026"
+      ],
+      "fields": [
+        {
+          "name": "Domain",
+          "value": "Medical",
+          "confidence": 0.99,
+          "source": "vision"
+        },
+        {
+          "name": "ContentType",
+          "value": "Verordnung",
+          "confidence": 0.95,
+          "source": "vision/verified"
+        },
+        {
+          "name": "KVNR",
+          "value": "P444444445",
+          "confidence": 0.86,
+          "source": "vision"
+        },
+        {
+          "name": "LastName",
+          "value": "Probe",
+          "confidence": 0.95,
+          "source": "vision"
+        },
+        {
+          "name": "FirstName",
+          "value": "Paul",
+          "confidence": 0.95,
+          "source": "vision"
+        },
+        {
+          "name": "BirthDate",
+          "value": "1960-01-01",
+          "confidence": 0.93,
+          "source": "vision"
+        },
+        {
+          "name": "DocumentDate",
+          "value": "2026-10-20",
+          "confidence": 0.92,
+          "source": "vision"
+        },
+        {
+          "name": "ValidFrom",
+          "value": "2026-11-01",
+          "confidence": 0.91,
+          "source": "vision"
+        },
+        {
+          "name": "ValidUntil",
+          "value": "2027-01-31",
+          "confidence": 0.91,
+          "source": "vision"
+        },
+        {
+          "name": "PrescriptionOrder",
+          "value": "Folgeverordnung",
+          "confidence": 0.93,
+          "source": "di"
+        }
+      ]
+    },
+    {
+      "file": "07-rechnung-buerobedarf.pdf",
+      "sha256": "84a0d3436dc35fac6522ff5db68b66bcede447f223561bd0900b81f2719164e8",
+      "scenario": "An office-supplies invoice: classified as a BUSINESS document (no patient dimension) \u2192 the business lane: REVIEW to choose a Zielbereich, then filed to the separate business library.",
+      "legibility": 0.94,
+      "pages": [
+        "SYNTHETISCHES MUSTERDOKUMENT - fiktive Daten, keine echte Person, Einrichtung oder Kasse\n\nB\u00FCrobedarf Beispiel GmbH (fiktiv) \u00B7 Papierstra\u00DFe 9 \u00B7 12345 Musterstadt\n\n# Rechnung Nr. 2026-0042\n\n**Rechnungsdatum:** 12.10.2026\n\n2 x Druckerpapier A4 (500 Blatt) \u00B7 1 x Ordner-Set \u00B7 1 x Toner schwarz\n\n**Gesamtbetrag:** 89,40 EUR (fiktiv)\n\nZahlbar innerhalb von 14 Tagen ohne Abzug."
+      ],
+      "fields": [
+        {
+          "name": "Domain",
+          "value": "Business",
+          "confidence": 0.97,
+          "source": "vision"
+        },
+        {
+          "name": "DocumentDate",
+          "value": "2026-10-12",
+          "confidence": 0.93,
+          "source": "vision"
+        }
+      ]
+    },
+    {
+      "file": "09-stapel-zwei-dokumente.pdf",
+      "sha256": "57ee33159c1e82db1781e837974b001f166f6055dc2a56773994c7d2f28c9572",
+      "scenario": "One scan containing two documents for two patients (a prescription for Anna Beispiel, then a lab report for Max Mustermann) \u2192 identity cannot be attributed \u2192 REVIEW. Split it into pages 1 and 2 in the review screen: each child is re-extracted on its own pages.",
+      "legibility": 0.9,
+      "pages": [
+        "SYNTHETISCHES MUSTERDOKUMENT - fiktive Daten, keine echte Person, Einrichtung oder Kasse\n\nPraxis Dr. med. Beispiel (fiktiv) \u00B7 Allgemeinmedizin \u00B7 Musterstra\u00DFe 1 \u00B7 12345 Musterstadt\n\n# Verordnung h\u00E4uslicher Krankenpflege\n\n**Name, Vorname:** Beispiel, Anna\n\n**geb. am:** 17.03.1939\n\n**Versicherten-Nr.:** T000000002\n\n[ ] Erstverordnung\n\n[X] Folgeverordnung\n\n**Zeitraum:** vom 01.01.2027 bis 31.03.2027\n\nBehandlungspflege: Medikamentengabe 3x t\u00E4glich.\n\n**Ausstellungsdatum:** 21.10.2026",
+        "SYNTHETISCHES MUSTERDOKUMENT - fiktive Daten, keine echte Person, Einrichtung oder Kasse\n\nLabor Musterstadt (fiktiv) \u00B7 Laborweg 5 \u00B7 12345 Musterstadt\n\n# Laborbericht\n\n**Patient:** Max Mustermann, geb. 29.05.1956\n\nKleines Blutbild unauff\u00E4llig; HbA1c 6,1 % (fiktive Werte).\n\n**Datum:** 22.10.2026"
+      ],
+      "fields": [
+        {
+          "name": "Domain",
+          "value": "Medical",
+          "confidence": 0.9,
+          "source": "vision"
+        },
+        {
+          "name": "ContentType",
+          "value": "Document",
+          "confidence": 0.55,
+          "source": "vision/unverified"
+        },
+        {
+          "name": "LastName",
+          "value": "Beispiel",
+          "confidence": 0.6,
+          "source": "vision"
+        },
+        {
+          "name": "FirstName",
+          "value": "Anna",
+          "confidence": 0.6,
+          "source": "vision"
+        },
+        {
+          "name": "BirthDate",
+          "value": "1939-03-17",
+          "confidence": 0.58,
+          "source": "vision"
+        }
+      ],
+      "units": [
+        {
+          "firstPage": 1,
+          "lastPage": 1,
+          "fields": [
+            {
+              "name": "Domain",
+              "value": "Medical",
+              "confidence": 0.99,
+              "source": "vision"
+            },
+            {
+              "name": "ContentType",
+              "value": "Verordnung",
+              "confidence": 0.95,
+              "source": "vision/verified"
+            },
+            {
+              "name": "KVNR",
+              "value": "T000000002",
+              "confidence": 0.96,
+              "source": "vision"
+            },
+            {
+              "name": "LastName",
+              "value": "Beispiel",
+              "confidence": 0.97,
+              "source": "vision"
+            },
+            {
+              "name": "FirstName",
+              "value": "Anna",
+              "confidence": 0.97,
+              "source": "vision"
+            },
+            {
+              "name": "BirthDate",
+              "value": "1939-03-17",
+              "confidence": 0.95,
+              "source": "vision"
+            },
+            {
+              "name": "DocumentDate",
+              "value": "2026-10-21",
+              "confidence": 0.93,
+              "source": "vision"
+            },
+            {
+              "name": "ValidFrom",
+              "value": "2027-01-01",
+              "confidence": 0.92,
+              "source": "vision"
+            },
+            {
+              "name": "ValidUntil",
+              "value": "2027-03-31",
+              "confidence": 0.92,
+              "source": "vision"
+            },
+            {
+              "name": "PrescriptionOrder",
+              "value": "Folgeverordnung",
+              "confidence": 0.94,
+              "source": "di"
+            }
+          ]
+        },
+        {
+          "firstPage": 2,
+          "lastPage": 2,
+          "fields": [
+            {
+              "name": "Domain",
+              "value": "Medical",
+              "confidence": 0.99,
+              "source": "vision"
+            },
+            {
+              "name": "ContentType",
+              "value": "Arztbrief",
+              "confidence": 0.92,
+              "source": "vision/verified"
+            },
+            {
+              "name": "LastName",
+              "value": "Mustermann",
+              "confidence": 0.96,
+              "source": "vision"
+            },
+            {
+              "name": "FirstName",
+              "value": "Max",
+              "confidence": 0.96,
+              "source": "vision"
+            },
+            {
+              "name": "BirthDate",
+              "value": "1956-05-29",
+              "confidence": 0.95,
+              "source": "vision"
+            },
+            {
+              "name": "DocumentDate",
+              "value": "2026-10-22",
+              "confidence": 0.91,
+              "source": "vision"
+            },
+            {
+              "name": "IssuingFacility",
+              "value": "Sonstiges",
+              "confidence": 0.85,
+              "source": "vision"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

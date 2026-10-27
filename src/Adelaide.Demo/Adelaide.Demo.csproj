@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Demo-mode adapters (public repository only): deterministic, offline stand-ins for the Azure OpenAI / Document
+       Intelligence transcription + extraction, the SharePoint "Patients" list, and the SharePoint document library.
+       They implement the SAME seams the production adapters do, so the real pipeline, gate, ledger and review UI run
+       unchanged on synthetic data. Nothing here performs network I/O. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\Adelaide.Core\Adelaide.Core.csproj" />
+    <ProjectReference Include="..\Adelaide.Ai\Adelaide.Ai.csproj" />
+    <ProjectReference Include="..\Adelaide.SharePoint\Adelaide.SharePoint.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

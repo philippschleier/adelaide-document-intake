@@ -1,0 +1,68 @@
+# .NET build output
+[Bb]in/
+[Oo]bj/
+
+# Sample / scanned documents — may contain PHI; never commit.
+# The ONLY exception is the generated, entirely fictional demo corpus (see demo/README.md and tools/Adelaide.SampleGen).
+samples/
+*.pdf
+!demo/samples/
+!demo/samples/*.pdf
+
+# Runtime intake working dirs — hold PHI (captured PDFs + review sidecars); never commit
+**/inbox/
+*.review.json
+
+# Secrets / credentials — NEVER commit
+.env
+.env.*
+!.env.example
+*.pfx
+*.cer
+
+# Node / Angular client (node_modules, build output, CLI cache)
+node_modules/
+**/dist/
+.angular/
+
+# IDE / OS
+.vs/
+*.user
+*.suo
+.idea/
+.DS_Store
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Local audit database (SQLite) — may contain document metadata; never commit
+*.db
+*.db-wal
+*.db-shm
+
+# Model-migration baselines — frozen transcripts + ledger subsets hold PHI; never commit.
+# The scripts that regenerate them are the durable artifact, not their outputs.
+baselines/
+
+# Structured log files (rolling JSON) — operational, never commit
+logs/
+**/logs/
+*.jsonl
+
+# Local run scripts carry secrets / machine-specific paths — never commit
+run-*.ps1
+**/run-*.ps1
+
+# Demo-mode runtime state (local filer output, demo ledger)
+.adelaide-demo/
+
+# Terraform — state can contain secrets (Easy Auth client secret etc.); apply with a remote
+# (azurerm) backend. NEVER commit state or real tfvars. The provider lock + *.tfvars.example ARE committed.
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+backend.hcl
+crash.log
+crash.*.log

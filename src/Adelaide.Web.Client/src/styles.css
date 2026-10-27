@@ -1,0 +1,30 @@
+/* Global design tokens + shared primitives (pills, buttons). Component layout lives in each component's CSS. */
+/* Shared UI design system (blue-600 accent, chrome/category tokens, .ui-btn/.ui-chip/.focus-ring). Additive —
+   the restyle migrates each screen onto these; the legacy tokens/classes below stay until every screen is moved. */
+@import './app/ui/ui.css';
+:root {
+  --bg: #f6f7f9; --card: #fff; --ink: #0f141a; --muted: #656871; --line: #e6e8ec;
+  --brand: #3b5bdb; --brand-weak: #eef1fd; --ok: #157f3b; --rev: #a25c00; --err: #b3261e;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+/* Reserve the page scrollbar's gutter so a short list (few rows, no scrollbar) doesn't shift the centered content
+   sideways vs a long list (scrollbar present). The dashboard scrolls the PAGE (Stripe-style), so this is the page
+   scroll container's gutter. Edge/Chrome 94+, Firefox 97+. */
+html { scrollbar-gutter: stable; }
+/* System font stack — Segoe UI on Windows renders crisp/solid; Open Sans (variable, static, and classic hinted builds)
+   all rasterized thin on this display's Chrome at dpr 1, so we use the OS font that Windows renders best. */
+body { font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+a { color: var(--accent); }
+
+button { font: inherit; border: 0; border-radius: 9px; padding: .55rem 1.1rem; cursor: pointer; }
+/* Legacy .primary/.ghost/.small button classes retired — every screen now uses the .ui-btn variants (app/ui/ui.css). */
+
+.pill { display: inline-flex; align-items: center; gap: .4rem; font-size: var(--font-caption-size); font-weight: var(--fw-bold); padding: .25rem .6rem; border-radius: 999px; white-space: nowrap; }
+.pill .dot { width: .5rem; height: .5rem; border-radius: 50%; }
+.s-wait { background: #eef0f3; color: #52606d; } .s-wait .dot { background: #9aa5b1; }
+.s-work { background: #e7edff; color: #2f4bbd; } .s-work .dot { background: #3b5bdb; animation: pulse 1s infinite; }
+.s-ok  { background: #e6f6ec; color: #157f3b; } .s-ok .dot  { background: #157f3b; }
+.s-rev { background: #fef3e0; color: #a25c00; } .s-rev .dot { background: #a25c00; }
+.s-err { background: #fdecea; color: #b3261e; } .s-err .dot { background: #b3261e; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }

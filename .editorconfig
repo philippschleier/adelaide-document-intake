@@ -1,0 +1,40 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.cs]
+indent_size = 4
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_using_directive_placement = outside_namespace:suggestion
+dotnet_sort_system_directives_first = true
+dotnet_style_namespace_match_folder = true:suggestion
+
+# Perf analyzers tuned for high-frequency logging / hot paths — irrelevant at this app's batch-rate document
+# throughput. Suppressed so a clean build means every remaining warning is actionable, not noise.
+dotnet_diagnostic.CA1848.severity = none   # use LoggerMessage delegates instead of ILogger extension methods
+dotnet_diagnostic.CA1873.severity = none   # don't evaluate log arguments when the level is disabled
+dotnet_diagnostic.CA1859.severity = none   # use concrete types for performance
+dotnet_diagnostic.CA1861.severity = none   # prefer 'static readonly' over constant array arguments
+dotnet_diagnostic.CA1845.severity = none   # use span-based string.Concat / AsSpan
+# Intentional API/domain shapes, not defects:
+dotnet_diagnostic.CA1720.severity = none   # identifier 'Single' — MatchOutcome.Single is a meaningful domain member
+dotnet_diagnostic.CA1068.severity = none   # CancellationToken not last — 'seed' is deliberately the positional-last param
+
+# Memory-safety guard (see BarcodeScanner + BannedSymbols.txt): the ZXingCpp ImageView(ReadOnlySpan<byte>,…) ctor
+# retains a raw pointer into the buffer with NO pin and NO managed reference, so under LOH-compacting server GC the
+# buffer can move/free mid-read (access violation) OR a relocated live buffer yields a clean decode of the WRONG image.
+# BannedApiAnalyzers (RS0030 + BannedSymbols.txt in Adelaide.Ai) forces every caller onto the IntPtr overload over
+# pinned memory. Error, not warning — this one silently mis-attributes patient identity.
+[src/Adelaide.Ai/**.cs]
+dotnet_diagnostic.RS0030.severity = error
+
+[*.{csproj,props,targets,json,yml,yaml,slnx,sln}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

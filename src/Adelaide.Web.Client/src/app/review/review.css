@@ -1,0 +1,188 @@
+/* Full-height two-pane grid: the row is pinned to the viewport (minmax(0,1fr)) so the panes can't grow past 100vh —
+   their internal overflow:auto scrolls instead of the whole page. (min-height:0 on the panes lets them shrink to the row.) */
+.rev { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(420px, 560px); grid-template-rows: minmax(0, 1fr); height: 100vh; }
+/* Collapsed (review steady only): the form panel is hidden (display:none — kept in the DOM so typed values survive) and
+   the document pane fills the width. Snap, not animated (animating the width would re-fit the page image every frame). */
+.rev.panel-collapsed { grid-template-columns: 1fr; }
+.rev.panel-collapsed .formpane { display: none; }
+
+.docpane { position: relative; display: flex; flex-direction: column; min-height: 0; background: var(--ui-chrome-2); }
+.docbar { display: flex; justify-content: space-between; align-items: center; padding: .5rem .8rem; background: var(--ui-chrome); }
+.docbar .back { display: inline-flex; align-items: center; gap: .3rem; color: var(--ui-chrome-muted); text-decoration: none; border-radius: var(--r-control); }
+.docbar .back:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+.docpane app-pdf-pane { flex: 1; display: flex; min-height: 0; }
+
+/* Rotation-save failure: a floating alert just ABOVE the viewer pill (bottom:14px, ~36px tall → clear it at 58px). That's
+   where the reviewer is looking when they rotate; the view has already snapped back to the last-saved angle, so this only
+   explains why. Anchored to .docpane (steady) / .splitbody (split) — both positioned. */
+.rot-error {
+  position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%); z-index: 4;
+  max-width: min(88%, 24rem); padding: .4rem .8rem;
+  background: var(--ui-err-weak); color: var(--ui-err); border: 1px solid var(--ui-err-line);
+  border-radius: 999px; font-size: var(--font-caption-size); text-align: center; box-shadow: 0 2px 12px rgba(0, 0, 0, .18);
+}
+/* In split mode the pill is centred over the VIEWER (right of the 128px rail), so nudge the alert right by half the rail. */
+.splitbody .rot-error { left: calc(50% + 64px); }
+
+/* Collapse handle — a tab on the seam (docpane's right edge): the seam is the panel boundary when expanded, the viewport
+   edge when collapsed (docpane full width). A narrow visible tab (~20px) but a 52px-tall click target. Always visible. */
+.panel-toggle {
+  position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 5;
+  width: 20px; height: 52px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--ui-line); border-right: 0; border-radius: var(--r-control) 0 0 var(--r-control);
+  background: var(--ui-card); color: var(--ui-ink-soft); cursor: pointer; box-shadow: -1px 0 6px rgba(0, 0, 0, .14);
+}
+.panel-toggle:hover { background: var(--ui-line-soft); color: var(--ui-ink); }
+.panel-toggle:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+
+.formpane { overflow-y: auto; min-height: 0; max-height: 100vh; padding: 1.4rem 1.5rem 3rem; }
+.formpane h1 { font-size: var(--font-title-size); font-weight: var(--fw-bold); margin: 0 0 .15rem; }
+.formpane .sub { color: var(--text-secondary); font-size: var(--font-caption-size); margin-bottom: 1rem; }
+.mono { font-family: ui-monospace, Consolas, monospace; font-size: var(--font-code-size); }
+
+.why { background: var(--ui-warn-weak); border: 2px solid var(--ui-warn-line); border-radius: 12px; padding: .6rem .85rem; margin-bottom: 1.1rem; font-size: var(--font-body-size); color: var(--ui-warn); }
+.why ul { margin: .3rem 0 0; padding-left: 1.1rem; }
+/* Supersede mode: a stronger amber banner (left rule) — this filing DELETES the existing document. */
+.supersede-banner { background: var(--ui-warn-weak); border: 2px solid var(--ui-warn-line); border-left: 4px solid var(--ui-warn); border-radius: 12px; padding: .6rem .85rem; margin-bottom: 1.1rem; font-size: var(--font-body-size); color: var(--ui-warn); }
+/* Supersede submit (replaces a filed doc): a solid-amber CTA — prominent like a primary, but cautionary (NOT destructive
+   red). Composes on top of .ui-btn, so it wins over --primary/--warn when the button toggles into supersede mode. */
+.ui-btn.btn-replace { background: var(--ui-warn); border-color: var(--ui-warn); color: #fff; }
+.ui-btn.btn-replace:hover { background: #8a4e00; }
+/* Primary submit/file button (the main CTA) — rounded (pill-ish) to stand out. */
+.submitbtn { border-radius: 20px; }
+
+.section { font-size: var(--font-heading-xs-size); color: var(--text-label); margin: .6rem 0 .5rem; font-weight: var(--fw-bold); }
+
+.field { display: block; margin-bottom: .9rem; }
+.field .lbl { display: block; font-size: var(--font-label-size); color: var(--text-label); margin-bottom: .25rem; font-weight: var(--fw-bold); }
+.field input, .field select { width: 100%; padding: .5rem .6rem; border: 1px solid var(--border-input); border-radius: 8px; font: inherit; background: var(--ui-card); }
+.field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); outline: none; }
+.warn-field input, .warn-field select { border-color: var(--ui-warn); background: var(--ui-warn-weak); }
+
+/* Business-document toggle: an inline checkbox+label (like the duplicate-overlay .ack), boxed so the mode switch reads
+   as distinct from the metadata fields. Placed after .field so its flex layout wins over .field's display:block. */
+.biz-toggle { display: flex; gap: .55rem; align-items: center; font-size: var(--font-body-size); line-height: 1.35; cursor: pointer;
+  background: var(--accent-weak); border: 2px solid var(--accent); border-radius: 12px; padding: .55rem .8rem; margin-bottom: 1.1rem; color: var(--text-body); }
+.biz-toggle input { flex: 0 0 auto; width: 1.05rem; height: 1.05rem; margin: 0; }
+
+/* ---- Doc top bar: nav + exits only (Download, Großansicht). Zoom + rotate live in the viewer pill. ---- */
+.docbar-tools { display: flex; align-items: center; gap: .4rem; }
+
+/* ---- Split MODE — the document pane splits into TWO zones: a narrow scannable RAIL (overview + cut placement) and a
+   large reading VIEWPORT (the selected page). The right panel is the resulting-documents card list. ---- */
+.split-title { display: inline-flex; align-items: center; gap: .4rem; color: var(--ui-chrome-ink); font-weight: var(--fw-bold); }
+.splitbody { position: relative; flex: 1; min-height: 0; display: flex; }
+
+/* Narrow rail: small page tiles so the WHOLE document is scannable at a glance; cut-gaps sit between them. Reading
+   happens in the viewport, never by enlarging tiles. Each tile is tinted to the document its page belongs to (the
+   category vars come from its .cat-N class, read directly since Angular scopes component styles). */
+.rail { flex: 0 0 auto; width: 128px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: .6rem .3rem 2rem; background: var(--ui-card); border-right: 1px solid var(--ui-line); }
+/* Rail tile is a BUTTON: click to jump the viewer to that page. .cur marks the page you're currently scrolling through. */
+.thumb { width: 96px; padding: .25rem; border: 0; border-left: 3px solid var(--c, var(--ui-line)); border-radius: var(--r-control); background: var(--c-tint, var(--ui-card)); text-align: center; cursor: pointer; font: inherit; display: block; }
+.thumb-img { width: 100%; display: block; border: 1px solid var(--ui-line); border-radius: 2px; background: var(--ui-card); }
+.thumb-num { display: block; margin-top: .15rem; font-size: var(--font-caption-size); font-weight: var(--fw-bold); color: var(--c-text, var(--ui-ink-soft)); }
+.thumb.cur { outline: 2px solid var(--accent); outline-offset: 1px; }
+.thumb:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+
+/* Cut-gap: the clickable space between two rail tiles — click to split there, click again to undo. */
+.cutgap { width: 96px; display: flex; align-items: center; gap: .25rem; padding: .25rem .1rem; margin: .05rem 0; background: none; border: 0; cursor: pointer; color: var(--icon-default); border-radius: var(--r-control); }
+.cutgap-line { flex: 1; height: 0; border-top: 1px dashed var(--ui-line); }
+.cutgap-ico { opacity: 0; transition: opacity .1s; }
+.cutgap:hover { color: var(--accent); }
+.cutgap:hover .cutgap-ico { opacity: 1; }
+.cutgap:hover .cutgap-line { border-top-color: var(--accent); }
+.cutgap.on { color: var(--accent); }
+.cutgap.on .cutgap-ico { opacity: 1; }
+.cutgap.on .cutgap-line { border-top: 2px solid var(--accent); }
+.cutgap:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+
+/* Continuous reading viewer fills the rest of the pane (scroll across all pages). The shared pdf-pane :host already
+   flexes; ensure it can shrink in this flex row. */
+.splitbody app-pdf-pane { flex: 1; min-width: 0; }
+
+/* Resulting-document cards — FLAT white + a colored left accent (no tint fill), with an editable name. */
+.newdocs { display: flex; flex-direction: column; gap: .6rem; margin: 1rem 0 1.2rem; }
+.newdoc { border: 1px solid var(--ui-line); border-left: 4px solid var(--c, var(--ui-line)); background: var(--ui-card); border-radius: var(--r-panel); padding: .55rem .6rem; }
+.newdoc-name { width: 100%; border: 1px solid transparent; border-radius: var(--r-control); background: transparent; padding: .2rem .3rem; font: inherit; font-weight: var(--fw-bold); font-size: var(--font-body-size); color: var(--ui-ink); }
+.newdoc-name:hover { border-color: var(--ui-line); }
+.newdoc-name:focus { outline: 2px solid var(--ui-focus); outline-offset: 0; border-color: var(--accent); }
+.newdoc-range { font-size: var(--font-caption-size); color: var(--ui-muted); margin: .1rem 0 0 .3rem; font-variant-numeric: tabular-nums; }
+
+/* Steady-state: the "Aufteilen" launch button sits at the left of the submit bar. */
+.submitbar .splitlaunch { margin-right: auto; }
+
+.conf { font-weight: var(--fw-bold); color: var(--ui-ok); font-style: normal; margin-left: .3rem; }
+.conf.low { color: var(--ui-warn); }
+.req { color: var(--ui-err); font-style: normal; font-weight: var(--fw-bold); margin-left: .15rem; }
+.warn { color: var(--ui-warn); font-size: var(--font-caption-size); font-style: normal; margin-left: .3rem; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 .9rem; }
+
+.patient { display: flex; align-items: center; gap: .7rem; }
+.pcard { flex: 1; background: var(--accent-weak); border: 1px solid var(--accent-weak-line); border-radius: var(--r-panel); padding: .55rem .7rem; }
+.pname { font-weight: var(--fw-bold); }
+.pmeta { font-size: var(--font-caption-size); color: var(--text-secondary); }
+.compare { font-size: var(--font-caption-size); color: var(--text-secondary); margin-top: .45rem; }
+.search { display: flex; gap: .5rem; }
+.search input { flex: 1; }
+.cands { margin-top: .5rem; border: 1px solid var(--ui-line); border-radius: var(--r-panel); overflow: hidden; }
+.cand { display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left; background: var(--ui-card); border: 0; border-bottom: 1px solid var(--ui-line); padding: .5rem .7rem; cursor: pointer; }
+.cand:hover { background: var(--accent-weak); }
+.cand:last-child { border-bottom: 0; }
+.cand:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: -2px; }
+.cn { font-weight: var(--fw-bold); }
+.cm { font-size: var(--font-caption-size); color: var(--ui-muted); }
+
+.muted { color: var(--ui-muted); font-size: var(--font-caption-size); }
+.errline { background: var(--ui-err-weak); color: var(--ui-err); border: 1px solid var(--ui-err-line); border-radius: var(--r-control); padding: .5rem .7rem; font-size: var(--font-body-size); margin: .6rem 0; }
+
+.submitbar { display: flex; gap: .7rem; justify-content: flex-end; align-items: center; margin-top: 1.2rem; }
+.btn { display: inline-flex; align-items: center; text-decoration: none; }
+/* "Abbrechen" (cancel) — a primary-colored link-style ghost, distinct from the neutral ghost actions. */
+.ui-btn--ghost.btn { color: var(--accent); border-radius: 20px; }
+.ui-btn--ghost.btn:hover { color: var(--accent-hover); background: var(--accent-weak); }
+/* "Aufteilen" — outlined primary: white bg, primary-600 border + text; hover → primary-900 + primary-50 bg. */
+/* "Aufteilen" launch button — outlined primary (white bg, primary-600 border + text; hover → primary-900 + primary-50 bg). */
+.aufteilen { border-radius: 20px; background: var(--ui-card); border-color: var(--accent); color: var(--accent); }
+.aufteilen:hover { background: var(--accent-weak); border-color: var(--accent-hover); color: var(--accent-hover); }
+/* Hover easing for the submit-bar CTAs (the :active press keeps its own quick transform timing). */
+.ui-btn--ghost.btn, .aufteilen, .submitbtn { transition: color 165ms cubic-bezier(.84, 0, .16, 1), background-color 165ms cubic-bezier(.84, 0, .16, 1), border-color 165ms cubic-bezier(.84, 0, .16, 1), transform .06s; }
+.hint-sm { text-align: right; margin-top: .4rem; }
+
+/* While a submit is in flight: the form (and the duplicate-overlay footer) is greyed AND inert (the [inert] attribute
+   blocks clicks/keyboard/focus, incl. the custom date inputs) — no edits and no double-submit until it resolves. */
+.locked { opacity: .55; cursor: progress; transition: opacity .12s ease; }
+
+.center { display: flex; align-items: center; justify-content: center; height: 100vh; color: var(--ui-muted); }
+.errbox { text-align: center; }
+
+/* Duplicate guardrail — full-screen compare-and-confirm overlay (evidence + decision in one place, no navigation) */
+.dup-overlay { position: fixed; inset: 0; background: var(--ui-card); z-index: 1000; display: flex; flex-direction: column; }
+.dup-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .65rem 1rem; background: var(--ui-warn-weak); border-bottom: 1px solid var(--ui-warn-line); }
+.dup-head-text strong { color: var(--ui-warn); font-size: var(--font-title-sm-size); font-weight: var(--fw-bold); display: inline-flex; align-items: center; gap: .35rem; }
+.dup-sub { font-size: var(--font-caption-size); color: var(--ui-warn); margin-top: .15rem; max-width: 90ch; }
+.dup-head-actions { display: flex; gap: .5rem; flex: 0 0 auto; }
+
+.dup-panes { flex: 1; min-height: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 1px; background: var(--ui-line); }
+.dup-pane { display: flex; flex-direction: column; min-height: 0; background: var(--ui-chrome-2); }
+.dup-plabel { padding: .4rem .7rem; font-size: var(--font-caption-size); background: var(--ui-chrome); color: var(--ui-chrome-muted); display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+.dup-plabel.new { border-left: 3px solid var(--accent); } /* "this document" — accent left border, not a full fill */
+.dup-plabel.diffl { background: var(--ui-chrome); }
+.dup-pane app-pdf-pane { flex: 1; display: flex; min-height: 0; }
+.dup-pane .diffbody { flex: 1; overflow: auto; background: var(--ui-card); text-align: center; }
+.dup-pane .diffbody img { max-width: 100%; display: block; margin: 0 auto; }
+.legend .sw { display: inline-block; width: .65rem; height: .65rem; background: var(--ui-diff); border-radius: 2px; vertical-align: middle; margin: 0 .15rem; }
+.pager { display: inline-flex; align-items: center; gap: .3rem; }
+
+.dup-foot { display: flex; justify-content: space-between; align-items: center; gap: 1.2rem; padding: .8rem 1.1rem; border-top: 1px solid var(--ui-line); background: var(--ui-card); }
+.dup-foot .ack { display: flex; gap: .55rem; align-items: center; font-size: var(--font-body-size); line-height: 1.35; max-width: 70ch; cursor: pointer; }
+.dup-foot .ack input { flex: 0 0 auto; width: 1.05rem; height: 1.05rem; }
+.dup-foot-actions { display: flex; gap: .7rem; flex: 0 0 auto; }
+
+@media (max-width: 880px) { .dup-panes { grid-auto-flow: row; } .dup-foot { flex-direction: column; align-items: stretch; } }
+
+@media (max-width: 880px) {
+  .rev { grid-template-columns: 1fr; grid-template-rows: none; height: auto; } /* stack + let the page scroll on mobile */
+  .docpane { height: 60vh; }
+  .formpane { max-height: none; }
+}

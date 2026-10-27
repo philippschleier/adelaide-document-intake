@@ -1,0 +1,26 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Adelaide.Ai/Adelaide.Ai.csproj" />
+    <Project Path="src/Adelaide.Audit/Adelaide.Audit.csproj" />
+    <Project Path="src/Adelaide.Core/Adelaide.Core.csproj" />
+    <Project Path="src/Adelaide.Demo/Adelaide.Demo.csproj" />
+    <Project Path="src/Adelaide.Drain/Adelaide.Drain.csproj" />
+    <Project Path="src/Adelaide.SharePoint/Adelaide.SharePoint.csproj" />
+    <Project Path="src/Adelaide.Web/Adelaide.Web.csproj" />
+    <Project Path="src/Adelaide.Worker/Adelaide.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Adelaide.Audit.Tests/Adelaide.Audit.Tests.csproj" />
+    <Project Path="tests/Adelaide.Core.Tests/Adelaide.Core.Tests.csproj" />
+    <Project Path="tests/Adelaide.Demo.Tests/Adelaide.Demo.Tests.csproj" />
+    <Project Path="tests/Adelaide.Migrate.Tests/Adelaide.Migrate.Tests.csproj" />
+    <Project Path="tests/Adelaide.SharePoint.Tests/Adelaide.SharePoint.Tests.csproj" />
+    <Project Path="tests/Adelaide.Web.Tests/Adelaide.Web.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Adelaide.ClassifyEval/Adelaide.ClassifyEval.csproj" />
+    <Project Path="tools/Adelaide.LinuxSmoke/Adelaide.LinuxSmoke.csproj" />
+    <Project Path="tools/Adelaide.Migrate/Adelaide.Migrate.csproj" />
+    <Project Path="tools/Adelaide.SampleGen/Adelaide.SampleGen.csproj" />
+  </Folder>
+</Solution>

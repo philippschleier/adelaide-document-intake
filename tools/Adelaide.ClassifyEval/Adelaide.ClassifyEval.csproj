@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Adelaide.ClassifyEval</RootNamespace>
+    <AssemblyName>Adelaide.ClassifyEval</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.14" /><!-- pins the native SQLite past GHSA-2m69-gcr7-jv3q (<= 2.1.11); Microsoft.Data.Sqlite still floors at 2.1.11 -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- IdentityAgreement (the oracle comparison) and IdentityOracleStore. Referenced rather than reimplemented so
+         the backfill and the live review path can never drift apart in how they compare or describe a difference. -->
+    <ProjectReference Include="..\..\src\Adelaide.Core\Adelaide.Core.csproj" />
+    <ProjectReference Include="..\..\src\Adelaide.Audit\Adelaide.Audit.csproj" />
+  </ItemGroup>
+
+</Project>

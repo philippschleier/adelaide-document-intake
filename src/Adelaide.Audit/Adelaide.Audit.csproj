@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Adelaide.Core\Adelaide.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.14" /><!-- pins the native SQLite past GHSA-2m69-gcr7-jv3q (<= 2.1.11); Microsoft.Data.Sqlite still floors at 2.1.11 -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" /><!-- transitive pin past CVE-2026-84008 / GHSA-846f-f764-76mx -->
+    <!-- Azure SQL audit substrate (production). Active Directory Default auth pulls a token via Azure.Identity (the App
+         Service managed identity) — keyless. -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

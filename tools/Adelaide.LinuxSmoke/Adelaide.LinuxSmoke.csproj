@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Adelaide.LinuxSmoke</RootNamespace>
+    <AssemblyName>Adelaide.LinuxSmoke</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Ai → PdfRenderer + SkiaSharp + PDFtoImage (libSkiaSharp.so, libpdfium.so);
+         Audit → SqliteAuditStore (libe_sqlite3.so). These pull in all three Linux natives the smoke must dlopen. -->
+    <ProjectReference Include="..\..\src\Adelaide.Ai\Adelaide.Ai.csproj" />
+    <ProjectReference Include="..\..\src\Adelaide.Audit\Adelaide.Audit.csproj" />
+  </ItemGroup>
+
+</Project>

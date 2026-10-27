@@ -1,0 +1,131 @@
+name: tests
+
+# THE canonical suite runner (supersedes the retired test.yml): every project under tests/ on every push, any
+# branch — including the ITranscriptStore CONTRACT suite against a real SQL Server container: the Azure SQL
+# capture-store twin AND infra/sql/capture-init.sql are under test here (CI is the only place the SQL variant is
+# guaranteed to run; locally it self-skips without ADELAIDE_TEST_SQL_CONNECTION). Globbed per project rather than via the solution so a test
+# project missing from Adelaide.slnx can never silently drop out of CI (verification finding). No PHI is involved
+# anywhere in this workflow — the contract tests use synthetic rows in throwaway databases.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: 'Y'
+          MSSQL_SA_PASSWORD: 'Adelaide-CI-0nly!'   # throwaway container credential, never a real secret
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'Adelaide-CI-0nly!' -Q 'SELECT 1' || exit 1"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Test every project under tests/ (SQLite always; SQL contract variant via the service container)
+        env:
+          ADELAIDE_TEST_SQL_CONNECTION: 'Server=localhost,1433;User Id=sa;Password=Adelaide-CI-0nly!;TrustServerCertificate=True;Encrypt=False'
+        run: |
+          set -e
+          shopt -s nullglob
+          for proj in tests/*/*.Tests.csproj; do
+            echo "::group::$proj"
+            dotnet test "$proj" -c Release --nologo
+            echo "::endgroup::"
+          done
+
+  # The capture-durability guard, DEMONSTRATED rather than asserted. The unit tests pin the pure decision function;
+  # they cannot prove it is WIRED — deleting the throw in Program.cs leaves the whole suite green. That gap is the
+  # exact shape of the defect the guard was restored for: the original C1 guard was credited as live in four
+  # documents after it had been deleted. So this job boots the real host under the guard's trigger conditions and
+  # asserts the process dies BY NAME. No SQL and no secrets: the placeholder ENTRA_* / SP_SITE_ID values only get
+  # composition past SharePointOptions.Load, and startup must abort before anything binds a port or opens a store.
+  durability-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build the web host
+        run: dotnet build src/Adelaide.Web/Adelaide.Web.csproj -c Release --nologo -o "$RUNNER_TEMP/web"
+
+      - name: A container run with a file-path capture store must FAIL startup, by name
+        env:
+          ADELAIDE_CONTAINER: '1'   # the guard's trigger: treat this process as a container
+          # Placeholders ONLY so composition reaches the guard: SharePointOptions.Load and AiOptions.Load both throw
+          # on a missing value, and there is no .env in CI. Neither is dialled — startup aborts before any client is
+          # used. If either of these ever stops being required, the check still holds; it asserts the exception NAME.
+          ENTRA_TENANT_ID: '00000000-0000-0000-0000-000000000000'
+          ENTRA_CLIENT_ID: '00000000-0000-0000-0000-000000000000'
+          SP_SITE_ID: 'contoso.sharepoint.invalid,ci-site,ci-web'
+          ENTRA_CLIENT_SECRET: 'ci-placeholder-not-a-credential'
+          ADELAIDE_OPENAI_ENDPOINT: 'https://ci-placeholder.invalid/'
+          ADELAIDE_AUDIT_DB: 'ci-guard-check.db'
+        run: |
+          set +e
+          out=$(dotnet "$RUNNER_TEMP/web/Adelaide.Web.dll" 2>&1); code=$?
+          set -e
+          echo "$out"
+          if [ "$code" -eq 0 ]; then
+            echo "::error::Startup SUCCEEDED with an ephemeral capture store in a container — the durability guard is not wired."
+            exit 1
+          fi
+          # Exit code alone proves nothing: the host could have died for an unrelated reason and this check would
+          # then be a green light for a guard that is gone. Require the name and the operator-facing content.
+          echo "$out" | grep -q 'CaptureDurabilityException' || {
+            echo "::error::Host exited $code but NOT via CaptureDurabilityException — it failed for some other reason, so this proves nothing about the guard."; exit 1; }
+          echo "$out" | grep -q 'substrate=SQLite'   || { echo "::error::Guard fired without naming the resolved substrate.";   exit 1; }
+          echo "$out" | grep -q 'ADELAIDE_SQL_SERVER' || { echo "::error::Guard fired without naming the variable to fix.";      exit 1; }
+          echo "Durability guard fired as designed (exit $code)."
+
+  # The Angular review client: install from the lockfile, production build, unit tests.
+  client:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/Adelaide.Web.Client
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: src/Adelaide.Web.Client/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm test -- --watch=false
+      - name: Production dependencies have no known vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
+
+  # Secret scanning over the full history of THIS repository (it never contained the private one's history).
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks (pinned release binary)
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks git . --redact --no-banner --verbose

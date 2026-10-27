@@ -1,0 +1,72 @@
+[
+  {
+    "listItemId": 101,
+    "kvnr": "Z000000005",
+    "lastName": "Mustermann",
+    "firstName": "Max",
+    "birthDate": "1956-05-29",
+    "status": "Aktiv",
+    "klientId": "K-0101",
+    "patientNr": "1001"
+  },
+  {
+    "listItemId": 102,
+    "kvnr": "T000000002",
+    "lastName": "Beispiel",
+    "firstName": "Anna",
+    "birthDate": "1939-03-17",
+    "status": "Aktiv",
+    "klientId": "K-0102",
+    "patientNr": "1002"
+  },
+  {
+    "listItemId": 103,
+    "kvnr": "M111111119",
+    "lastName": "Musterfrau",
+    "firstName": "Erika",
+    "birthDate": "1948-11-02",
+    "status": "Aktiv",
+    "klientId": "K-0103",
+    "patientNr": "1003"
+  },
+  {
+    "listItemId": 104,
+    "kvnr": "T222222226",
+    "lastName": "Testfall",
+    "firstName": "Klara",
+    "birthDate": "1944-02-20",
+    "status": "Aktiv",
+    "klientId": "K-0104",
+    "patientNr": "1004"
+  },
+  {
+    "listItemId": 105,
+    "kvnr": "T333333338",
+    "lastName": "Testfall",
+    "firstName": "Klara",
+    "birthDate": "1944-02-20",
+    "status": "Aktiv",
+    "klientId": "K-0105",
+    "patientNr": "1005"
+  },
+  {
+    "listItemId": 106,
+    "kvnr": "P444444442",
+    "lastName": "Probe",
+    "firstName": "Paul",
+    "birthDate": "1960-01-01",
+    "status": "Aktiv",
+    "klientId": "K-0106",
+    "patientNr": "1006"
+  },
+  {
+    "listItemId": 107,
+    "kvnr": "P555555558",
+    "lastName": "Probe",
+    "firstName": "Paul",
+    "birthDate": "1960-01-01",
+    "status": "Inaktiv",
+    "klientId": "K-0107",
+    "patientNr": "1007"
+  }
+]

@@ -1,0 +1,88 @@
+/* Stripe-style layout: the PAGE is the single scroll container (one normal page scrollbar). The chrome is pinned via
+   position:sticky and the rows scroll underneath via CDK window-scrolling (scrollWindow) — only visible rows in the DOM.
+   No inner viewport, no overflow:hidden shell, no calc(100vh − chrome). */
+.wrap { max-width: 920px; margin: 0 auto; padding: 0 1.1rem 2rem; }
+header h1 { font-size: var(--font-title-size); font-weight: var(--fw-bold); margin: 0 0 .15rem; }
+header p { margin: 0; color: var(--text-secondary); font-size: var(--font-body-size); }
+
+/* Pinned chrome: header + chips + list title + column header. Its page background masks rows scrolling under it. */
+.chrome { position: sticky; top: 0; z-index: 10; background: var(--bg); padding-top: 1.4rem; }
+
+/* PRIMARY upload affordance: a small circular "+" in the list title (inline in the chrome, NOT a floating FAB). */
+.addbtn {
+  width: 20px; height: 20px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 9999em;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff; cursor: pointer;
+}
+.addbtn:hover { background: var(--accent-hover); }
+.addbtn:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
+
+/* SECONDARY upload: reveal-on-drag overlay — position:fixed so it covers the viewport while a file is dragged.
+   pointer-events:none so the drag events pass THROUGH to .wrap's handlers (the overlay is purely visual). */
+.dropoverlay {
+  position: fixed; inset: 1rem; z-index: 100; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(239, 246, 255, .92); border: 2px dashed var(--accent); border-radius: var(--r-card);
+}
+.dropoverlay-inner { text-align: center; color: var(--accent); font-weight: var(--fw-bold); }
+.dropoverlay-inner .big { display: flex; justify-content: center; margin-bottom: .2rem; }
+
+/* The upload-staging panel (transient — only while files are queued) + its file rows. */
+.panel { margin-top: 1.3rem; background: var(--ui-card); border: 1px solid var(--ui-line); border-radius: var(--r-card); overflow: hidden; }
+.panel h2 {
+  font-size: var(--font-heading-xs-size); font-weight: var(--fw-bold); color: var(--text-label);
+  margin: 0; padding: .8rem 1rem; border-bottom: 1px solid var(--ui-line); display: flex; justify-content: space-between;
+}
+.frow { display: flex; align-items: center; gap: .8rem; padding: .6rem 1rem; border-bottom: 1px solid var(--ui-line); }
+.frow:last-of-type { border-bottom: none; }
+.frow .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-body-size); }
+.frow .meta { color: var(--ui-muted); font-size: var(--font-caption-size); }
+.actions { padding: .85rem 1rem; display: flex; gap: .6rem; justify-content: flex-end; background: var(--ui-line-soft); }
+
+/* Counts summary chips. min-height reserves the one-row band so it doesn't grow the sticky chrome — and shove the list
+   under it — when stats() resolves on load. Kept ≥ the populated 1-row height (measured 36.9px @16px root ⇒ 2.31rem), so
+   reserved == populated and CLS = 0. One row at the 920px desktop width; may wrap on very narrow viewports (acceptable). */
+.counts { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.3rem; min-height: 2.31rem; }
+.cnt { display: inline-flex; align-items: center; gap: .3rem; background: var(--ui-card); border: 1px solid var(--ui-line); border-radius: var(--r-panel); padding: .45rem .7rem; font: inherit; font-size: var(--font-body-size); color: var(--text-secondary); cursor: pointer; }
+.cnt:hover { border-color: var(--accent); }
+.cnt.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-weak); }
+.cnt:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+.cnt b { color: var(--ui-ink); font-size: var(--font-body-size); font-weight: var(--fw-bold); margin-left: .3rem; }
+.cnt.total { background: var(--accent-weak); border-color: var(--accent-weak-line); }
+.cnt.ok b { color: var(--ui-ok); }
+.cnt.work b { color: var(--accent); }
+.cnt.rev b { color: var(--ui-warn); }
+.cnt.err b { color: var(--ui-err); }
+
+/* List title (the "Dokumente N von M" label + "+" button), above the table. */
+.listtitle {
+  display: flex; justify-content: space-between; align-items: center; margin: 1.3rem 0 .5rem;
+  font-size: var(--font-heading-xs-size); font-weight: var(--fw-bold); color: var(--text-label);
+}
+.nofm { font-weight: var(--fw-normal); text-transform: none; letter-spacing: 0; color: var(--ui-muted); font-size: var(--font-caption-size); margin-left: .4rem; }
+.h2r { display: flex; align-items: center; gap: .8rem; text-transform: none; letter-spacing: 0; }
+.h2r .live { display: inline-flex; align-items: center; gap: .25rem; color: var(--accent); }
+
+/* The document table — a flush white card. The column header (.lhead) is pinned in the chrome; the rows (.lviewport)
+   scroll with the WINDOW. Every variable-length field is clamped to ONE ellipsized line, so the 56px row height is
+   invariant to content — required for fixed-size virtual scroll. */
+.lgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) minmax(7rem, 1.1fr) minmax(0, 2.5fr);
+  gap: 1rem; padding: 0 1rem; align-items: center;
+}
+.lgrid > * { min-width: 0; } /* let grid cells shrink below content width so text-overflow:ellipsis engages */
+.lhead {
+  height: 2.4rem; background: var(--ui-card); border: 1px solid var(--border-row-divider);
+  font-size: var(--font-heading-xs-size); font-weight: var(--fw-bold); color: var(--text-label);
+}
+.lviewport { background: var(--ui-card); border: 1px solid var(--border-row-divider); border-top: none; }
+.vrow { height: 56px; box-sizing: border-box; overflow: hidden; border-bottom: 1px solid var(--border-row-divider); font-size: var(--font-body-size); line-height: 1.3; }
+.doc { font-weight: var(--fw-bold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sub { color: var(--ui-muted); font-size: var(--font-caption-size); margin-top: .1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-type { color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hint { color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.errhint { color: var(--ui-err); }
+.hintactions { display: flex; align-items: center; gap: .9rem; margin-top: .1rem; white-space: nowrap; overflow: hidden; }
+.hintactions .dngr { color: var(--ui-err); } /* the row-level discard — destructive, so it reads as such */
+.empty { background: var(--ui-card); border: 1px solid var(--border-row-divider); border-top: none; padding: 1.4rem 1rem; color: var(--ui-muted); font-size: var(--font-body-size); text-align: center; }

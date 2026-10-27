@@ -1,0 +1,7 @@
+<span class="dwrap" [class.bad]="invalid()">
+  <input type="text" placeholder="TT.MM.JJJJ" [matDatepicker]="picker" [value]="pickerValue()"
+         (click)="picker.open()" (dateInput)="onInput($event)" />
+  <mat-datepicker-toggle [for]="picker" />
+  <mat-datepicker #picker />
+</span>
+@if (invalid()) { <em class="warn">Ungültiges Datum — Format TT.MM.JJJJ</em> }

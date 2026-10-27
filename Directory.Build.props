@@ -1,0 +1,21 @@
+<Project>
+  <!-- Common settings for every project in the repo. Per-project .csproj can override. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <!-- Keep warnings as warnings for now; tighten to errors once the tree is clean. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Optional: redirect all bin/obj output (e.g. off a quota-capped profile disk) with ADELAIDE_ARTIFACTS_PATH.
+       Unset → stock per-project bin/obj, which is what CI and the Docker build use. -->
+  <PropertyGroup Condition="'$(ArtifactsPath)' == '' AND '$(ADELAIDE_ARTIFACTS_PATH)' != ''">
+    <ArtifactsPath>$(ADELAIDE_ARTIFACTS_PATH)</ArtifactsPath>
+  </PropertyGroup>
+
+  <!-- NuGet audit stays ON with no suppressions: vulnerable transitive natives/crypto are pinned per project instead
+       (SQLitePCLRaw.lib.e_sqlite3 >= 2.1.12, System.Security.Cryptography.Pkcs >= 10.0.13). -->
+</Project>

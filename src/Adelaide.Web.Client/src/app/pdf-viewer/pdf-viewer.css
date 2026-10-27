@@ -1,0 +1,35 @@
+/* Full-screen scrim covering everything behind (the dashboard) + a centred window. Esc closes (component); a click on
+   the scrim closes. z-index matches the app's full-screen-overlay convention (the dup-overlay) so nothing shows through. */
+.modal {
+  position: fixed; inset: 0; z-index: 1000; padding: 1.4rem;
+  background: rgba(20, 24, 33, .55);
+  display: flex; align-items: center; justify-content: center;
+}
+.dialog {
+  position: relative; /* anchor for the rotation-error alert floated over the pane */
+  display: flex; flex-direction: column;
+  width: min(820px, 94vw); height: min(80vh, 920px);
+  background: var(--ui-card); border-radius: var(--r-card); overflow: hidden;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, .34);
+}
+.dialog.max { width: 98vw; height: 96vh; }
+
+/* Dark title bar (.on-chrome themes the ghost button for light-on-dark; the primary/accent already reads on dark). */
+.mbar {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: .5rem .8rem; background: var(--ui-chrome); color: var(--ui-chrome-ink);
+}
+.mt { display: inline-flex; align-items: center; gap: .4rem; min-width: 0; }
+.mt-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mbtns { display: flex; gap: .5rem; flex: 0 0 auto; }
+
+app-pdf-pane { flex: 1; display: flex; min-height: 0; }
+
+/* Rotation-save failure: a floating alert just ABOVE the viewer pill (bottom:14px, ~36px tall → clear it at 58px). The
+   view has already snapped back to the last-saved angle; this only explains why. */
+.rot-error {
+  position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%); z-index: 4;
+  max-width: min(88%, 24rem); padding: .4rem .8rem;
+  background: var(--ui-err-weak); color: var(--ui-err); border: 1px solid var(--ui-err-line);
+  border-radius: 999px; font-size: var(--font-caption-size); text-align: center; box-shadow: 0 2px 12px rgba(0, 0, 0, .18);
+}

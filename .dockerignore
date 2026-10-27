@@ -1,0 +1,51 @@
+# Keep the build context lean — and CRITICALLY keep secrets + PHI out of the image and context.
+
+# Secrets / credentials
+.env
+.env.*
+*.pfx
+*.cer
+**/run-*.ps1
+.adelaide-demo/
+
+# Demo corpus — not part of the production image (demo mode reads it from the repo checkout)
+demo/
+
+# PHI — scanned docs, captured intake, audit DBs, review/filing sidecars, logs
+samples/
+*.pdf
+**/inbox/
+*.review.json
+*.filing.json
+*.db
+*.db-wal
+*.db-shm
+logs/
+**/logs/
+*.jsonl
+
+# Build outputs / deps (rebuilt fresh inside the image)
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+.angular/
+
+# Terraform — never in the app image (also avoids shipping any state)
+infra/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+backend.hcl
+
+# Not needed to build the web image
+tests/
+tools/
+.git/
+.github/
+.vs/
+.vscode/
+.idea/
+*.user
+**/*.md

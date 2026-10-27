@@ -1,0 +1,233 @@
+/* ============================================================================
+ * Adelaide shared UI — the design system (single source of truth).
+ *
+ * Global (imported once from styles.css) because component styles are scoped by
+ * Angular's emulated encapsulation, but these tokens + primitive classes must be
+ * usable from every screen. The design tokens (type / color / radii) are consumed by
+ * component CSS across every screen; the .text-* / .ui-* utility classes are opt-in
+ * (a surface adds the class to adopt a level).
+ *
+ * Contract (from the split-view reference): one restrained accent (#006ce0),
+ * everything else neutral gray; per-category color ONLY as a left-border accent
+ * + light tint (never a full fill); the system font stack, two weights (400
+ * Normal / 700 Bold) via the type scale below; a visible focus ring on every
+ * interactive element; sentence-case, active-voice copy.
+ *
+ * PROVENANCE WARNING — the DESIGN-INTENT comments in this file are UNATTESTED.
+ * The color/restyle comments arrived with inherited work and assert rationale
+ * nobody in this workstream has verified: the "Contract (from the split-view
+ * reference)" above cites a reference document that has never been produced;
+ * the "raw Cloudscape scale" / "no Cloudscape primary-200 supplied yet" claims
+ * imply a sourcing relationship with a design system that is not recorded
+ * anywhere; the "outside the Cloudscape light palette" label on --ui-chrome*
+ * is a post-hoc framing (those tokens PREDATE the restyle -- their only
+ * recorded reason was DRY consolidation of hexes re-typed across four
+ * components, not a design decision); and styles.css's font-rasterization
+ * claim ("Open Sans ... rasterized thin on this display's Chrome at dpr 1")
+ * is a specific empirical assertion no one here has reproduced.
+ * Treat all of the above as UNVERIFIED INFERENCE, not as spec. Do not cite
+ * them as justification for a change. The TYPE SYSTEM comments below are a
+ * separate matter -- those describe decisions made and verified in-workstream.
+ * ========================================================================== */
+
+:root {
+  /* ============ PRIMITIVES — the raw Cloudscape scale, single source of truth. ============ */
+  --neutral-950: #0f141a;  --neutral-650: #424650;  --neutral-600: #656871;  --neutral-500: #8c8c94;
+  --neutral-400: #b4b4bb;  --neutral-350: #c6c6cd;  --neutral-300: #dedee3;  --neutral-250: #ebebf0;
+  --neutral-200: #f3f3f7;  --neutral-150: #f6f6f9;  --neutral-100: #f9f9fa;  --white: #ffffff;
+  --primary-900: #002b66;  --primary-600: #006ce0;  --primary-50: #f0fbff;
+  --success-600: #00802f;  --success-50: #effff1;
+  --warning-900: #855900;  --warning-400: #ffe347;  --warning-50: #fffef0;
+  --error-600:  #db0000;   --error-50:  #fff5f5;    --severity-red: #ce3311;
+
+  /* ============ SEMANTIC — role tokens; components reference THESE, never a raw primitive. ============ */
+  /* text */
+  --text-body:      var(--neutral-950);  /* body, table cell data, values */
+  --text-label:     var(--neutral-950);  /* form-field, section, and key/value labels */
+  --text-secondary: var(--neutral-650);  /* descriptions, group labels, resting clickable (tabs/icons) */
+  --text-faint:     var(--neutral-600);  /* placeholder, constraint, counter, empty, inactive, opaque IDs */
+  --text-disabled:  var(--neutral-400);
+  --text-link:      var(--primary-600);  --text-link-hover: var(--primary-900);
+  --text-success:   var(--success-600);  --text-warning: var(--warning-900);  --text-error: var(--error-600);
+  /* icon */
+  --icon-default: var(--neutral-650);  --icon-hover: var(--neutral-950);  --icon-subtle: var(--neutral-600);
+  /* surface + border */
+  --bg-surface:  var(--white);          --bg-selected: var(--primary-50);   --bg-hover: var(--neutral-200);
+  --bg-success:  var(--success-50);     --bg-warning:  var(--warning-50);   --bg-error: var(--error-50);
+  --badge-warning: var(--warning-400);  --badge-error: var(--error-600);    --badge-neutral: var(--neutral-650);
+  --border-divider: var(--neutral-350); --border-input: var(--neutral-500); --border-selected: var(--primary-600);
+  --border-success: var(--success-600); --border-warning: var(--warning-900); --border-error: var(--error-600);
+  /* neutral-250 border for tables/collections — row dividers AND (this app) the table's outer frame; lighter than the general --border-divider (neutral-350). */
+  --border-row-divider: var(--neutral-250);
+  --focus-ring:  var(--primary-600);
+
+  /* ---- Accent (interactive primary; --accent is referenced widely). ---- */
+  --accent:            var(--primary-600);
+  --accent-hover:      var(--primary-900);
+  --accent-weak:       var(--primary-50);
+  --accent-weak-line:  #bfdbfe;              /* tinted border (no Cloudscape primary-200 supplied yet) */
+  --accent-ink:        var(--primary-900);
+
+  /* ---- Legacy aliases → semantic (DEPRECATED; being replaced by direct role refs). ---- */
+  --ui-card: var(--bg-surface);
+  --ui-ink: var(--text-body);      --ui-ink-soft: var(--text-secondary);  --ui-muted: var(--text-faint);
+  --ui-line: var(--border-divider);  --ui-line-soft: var(--neutral-150);
+  --ui-ok: var(--text-success);    --ui-ok-weak: var(--bg-success);
+  --ui-warn: var(--text-warning);  --ui-warn-weak: var(--bg-warning);  --ui-warn-line: var(--border-warning);
+  --ui-err: var(--text-error);     --ui-err-weak: var(--bg-error);     --ui-err-line: var(--border-error);
+  --ui-diff: var(--severity-red);
+  --ui-focus: var(--focus-ring);
+
+  /* ---- Chrome: the DARK viewer surfaces (PDF panes, modal bars) — outside the Cloudscape light palette. ---- */
+  --ui-chrome:       #1f2430;   /* darkest bar */
+  --ui-chrome-2:     #525659;   /* viewer canvas ground */
+  --ui-chrome-line:  #3a4150;   /* border between chrome panes */
+  --ui-chrome-ink:   #e5e7eb;   /* text on chrome */
+  --ui-chrome-muted: #9aa3b2;   /* muted text on chrome */
+
+  /* ---- Radii scale ---- */
+  --r-card:    12px;   /* cards */
+  --r-panel:    8px;   /* panels / banners */
+  --r-control:  6px;   /* buttons / inputs / chips-as-controls */
+  --r-pill:   999px;   /* status pills, chips */
+
+  /* ---- Category palette (paletteFor(i)): teal / violet / amber / sky / rose / lime.
+   *      Used ONLY as a left-border accent (--c) + a light tint (--c-tint), with a
+   *      darker same-family text (--c-text). Never a full fill. ---- */
+  --cat-0:      #14b8a6;  --cat-0-tint: #f0fdfa;  --cat-0-text: #0f766e;  /* teal   */
+  --cat-1:      #8b5cf6;  --cat-1-tint: #f5f3ff;  --cat-1-text: #6d28d9;  /* violet */
+  --cat-2:      #f59e0b;  --cat-2-tint: #fffbeb;  --cat-2-text: #b45309;  /* amber  */
+  --cat-3:      #0ea5e9;  --cat-3-tint: #f0f9ff;  --cat-3-text: #0369a1;  /* sky    */
+  --cat-4:      #f43f5e;  --cat-4-tint: #fff1f2;  --cat-4-text: #be123c;  /* rose   */
+  --cat-5:      #84cc16;  --cat-5-tint: #f7fee7;  --cat-5-text: #4d7c0f;  /* lime   */
+}
+
+/* ---- TYPE SYSTEM (tokens in the :root below, consumed by every screen's component CSS). Two layers:
+ *      Layer 1 = size + line-height PRIMITIVES (a rem ladder); Layer 2 = SEMANTIC ROLES (title / body /
+ *      caption / ...) that consume Layer 1 - components reference a ROLE, never a primitive. Weight is
+ *      orthogonal, also tokenized: TWO WEIGHTS ONLY - --fw-normal (400) / --fw-bold (700). The .text-*
+ *      utility classes below bundle a role's size + leading + weight for opt-in from a template. ---- */
+:root {
+  /* Layer 1 - PRIMITIVES (the px in each comment is the value at the 16px root). */
+  --font-size-12: 0.75rem;    /* 12px */
+  --font-size-14: 0.875rem;   /* 14px */
+  --font-size-16: 1rem;       /* 16px */
+  --font-size-18: 1.125rem;   /* 18px */
+  --font-size-20: 1.25rem;    /* 20px */
+  --font-size-24: 1.5rem;     /* 24px */
+  --line-height-16: 1rem;     /* 16px */
+  --line-height-18: 1.125rem; /* 18px */
+  --line-height-20: 1.25rem;  /* 20px */
+  --line-height-22: 1.375rem; /* 22px */
+  --line-height-24: 1.5rem;   /* 24px */
+  --line-height-30: 1.875rem; /* 30px */
+  --fw-normal: 400; --fw-bold: 700;
+
+  /* Layer 2 - SEMANTIC ROLES: the name encodes the ROLE, not the value, so a design change (e.g. body
+     14->16px) is one edit here, not N call-sites. Component call-sites consume THESE; weight stays
+     orthogonal (--fw-normal / --fw-bold). The 57-declaration -> role assignment lives in FRONTEND_AUDIT.md.
+     NOTE: caption is ~44% of the app's typography (25/57 call-sites). The most likely future split is
+       the control cluster - which spans TWO roles: .ui-btn is body (14px), while .ui-btn--sm / .ui-chip
+       / .ui-eyebrow / .pill are caption (12px). A future `control` role pulls from BOTH; splitting only
+       the caption members strands .ui-btn. Reversal cost: ~2 tokens + 5 repoints across body + caption.
+     NOTE: heading-xs holds 1 dead sentence-case class (.text-heading-xs) + 4 live UPPERCASE headers
+       (.panel h2 / .listtitle / .lhead / .section). If .text-heading-xs is ever adopted for a
+       sentence-case heading, it inherits the column headers' sizing. */
+  --font-title-size:      var(--font-size-20);  --font-title-lineHeight:      var(--line-height-24);  /* 20/24  page & panel titles */
+  --font-title-sm-size:   var(--font-size-16);  --font-title-sm-lineHeight:   var(--line-height-20);  /* 16/20  dialog / overlay titles */
+  --font-heading-xl-size: var(--font-size-24);  --font-heading-xl-lineHeight: var(--line-height-30);  /* 24/30  scale HEADROOM: no live use; kept deliberately, do not prune as unused (utility class: .text-heading-xl). */
+  --font-heading-md-size: var(--font-size-18);  --font-heading-md-lineHeight: var(--line-height-22);  /* 18/22  scale HEADROOM: no live use; kept deliberately, do not prune as unused (utility class: .text-heading-md). */
+  --font-heading-xs-size: var(--font-size-14);  --font-heading-xs-lineHeight: var(--line-height-18);  /* 14/18  section / table headers */
+  --font-label-size:      var(--font-size-14);  --font-label-lineHeight:      var(--line-height-18);  /* 14/18  form input labels */
+  --font-body-size:       var(--font-size-14);  --font-body-lineHeight:       var(--line-height-20);  /* 14/20  body, data, messages */
+  --font-code-size:       var(--font-size-12);  --font-code-lineHeight:       var(--line-height-16);  /* 12/16  monospace */
+  --font-caption-size:    var(--font-size-12);  --font-caption-lineHeight:    var(--line-height-16);  /* 12/16  meta, small text */
+}
+.text-heading-xl { font-size: var(--font-heading-xl-size); line-height: var(--font-heading-xl-lineHeight); font-weight: var(--fw-bold); }  /* h1 — page title */
+.text-title { font-size: var(--font-title-size); line-height: var(--font-title-lineHeight); font-weight: var(--fw-bold); }  /* h2 — container title */
+.text-heading-md { font-size: var(--font-heading-md-size); line-height: var(--font-heading-md-lineHeight); font-weight: var(--fw-bold); }  /* h3 — card/section header, key/value column title, help-panel section */
+.text-title-sm { font-size: var(--font-title-sm-size); line-height: var(--font-title-sm-lineHeight); font-weight: var(--fw-bold); }  /* h4 — paragraph title */
+.text-heading-xs { font-size: var(--font-heading-xs-size); line-height: var(--font-heading-xs-lineHeight); font-weight: var(--fw-bold); }  /* h5 — section within a paragraph */
+.text-body { font-size: var(--font-body-size); line-height: var(--font-body-lineHeight); font-weight: var(--fw-normal); }  /* p — body / paragraph text */
+.text-caption { font-size: var(--font-caption-size); line-height: var(--font-caption-lineHeight); font-weight: var(--fw-normal); }  /* small — descriptions, constraints, field errors, wizard steps */
+
+/* ---- Focus ring utility: attach to any focusable element that isn't a .ui-btn/.ui-icon-btn. ---- */
+.focus-ring:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+
+/* ---- Buttons: primary / secondary / ghost / danger. Bold (700), subtle press. ---- */
+.ui-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  border: 2px solid transparent; border-radius: var(--r-control);
+  padding: .5rem .8rem; font: inherit; font-size: var(--font-body-size); font-weight: var(--fw-bold); line-height: 1;
+  cursor: pointer; white-space: nowrap;
+  transition: background-color .12s, border-color .12s, color .12s, transform .06s;
+}
+.ui-btn:active { transform: scale(.98); }
+.ui-btn:disabled { opacity: .4; pointer-events: none; }
+.ui-btn:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+.ui-btn--primary   { background: var(--accent); color: #fff; }
+.ui-btn--primary:hover   { background: var(--accent-hover); }
+.ui-btn--secondary { background: var(--ui-card); border-color: var(--ui-line); color: var(--ui-ink-soft); }
+.ui-btn--secondary:hover { background: var(--ui-line-soft); }
+.ui-btn--ghost     { background: transparent; color: var(--text-secondary); }
+.ui-btn--ghost:hover     { background: var(--ui-line-soft); color: var(--ui-ink-soft); }
+.ui-btn--danger    { background: var(--ui-card); border-color: var(--ui-err-line); color: var(--ui-err); }
+.ui-btn--danger:hover    { background: var(--ui-err-weak); }
+/* warn = cautionary, NOT destructive: the "replace existing / supersede" action (amber, distinct from danger red). */
+.ui-btn--warn      { background: var(--ui-card); border-color: var(--ui-warn-line); color: var(--ui-warn); }
+.ui-btn--warn:hover      { background: var(--ui-warn-weak); }
+.ui-btn--sm { padding: .3rem .55rem; font-size: var(--font-caption-size); }
+
+/* On a dark "chrome" bar (viewer toolbars, PDF panes) the light-surface skins vanish — these re-skin
+ * ghost/secondary for light-on-dark. Wrap the bar in .on-chrome; primary (accent) already reads on dark. */
+.on-chrome .ui-btn--ghost { color: var(--ui-chrome-ink); }
+.on-chrome .ui-btn--ghost:hover { background: rgba(255, 255, 255, .12); color: #fff; }
+.on-chrome .ui-btn--secondary { background: transparent; border-color: var(--ui-chrome-line); color: var(--ui-chrome-ink); }
+.on-chrome .ui-btn--secondary:hover { background: rgba(255, 255, 255, .08); }
+.on-chrome .ui-icon-btn { background: transparent; border-color: var(--ui-chrome-line); color: var(--ui-chrome-ink); }
+.on-chrome .ui-icon-btn:hover { background: rgba(255, 255, 255, .12); color: #fff; }
+
+/* ---- Icon-only button: ALWAYS carries an aria-label at the callsite. ---- */
+.ui-icon-btn {
+  display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem;
+  border: 2px solid var(--ui-line); border-radius: var(--r-control);
+  background: var(--ui-card); color: var(--icon-default); cursor: pointer;
+  transition: background-color .12s, color .12s, transform .06s;
+}
+.ui-icon-btn:hover { background: var(--ui-line-soft); color: var(--ui-ink-soft); }
+.ui-icon-btn:active { transform: scale(.95); }
+.ui-icon-btn:disabled { opacity: .4; pointer-events: none; }
+.ui-icon-btn:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; }
+
+/* ---- Chips: rounded, tinted bg + darker same-family text. accent / neutral / locked. ---- */
+.ui-chip {
+  display: inline-flex; align-items: center; gap: .3rem;
+  border-radius: var(--r-pill); padding: .15rem .5rem;
+  font-size: var(--font-caption-size); font-weight: var(--fw-normal); line-height: 1.4; white-space: nowrap;
+}
+.ui-chip--neutral { background: var(--ui-line-soft); color: var(--ui-ink-soft); }
+.ui-chip--accent  { background: var(--accent-weak); color: var(--accent-ink); }
+.ui-chip--locked  { background: var(--ui-line-soft); color: var(--ui-muted); }
+
+/* ---- Surfaces + eyebrow ---- */
+.ui-card   { background: var(--ui-card); border: 1px solid var(--ui-line); border-radius: var(--r-card); }
+.ui-panel  { border-radius: var(--r-panel); }
+.ui-eyebrow { font-size: var(--font-caption-size); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: .05em; color: var(--text-label); }
+
+/* ---- Category accent (paletteFor(i)). Set .cat-{0..5} to pick the hue, then use
+ *      .cat-edge (left-border + tint) and/or .cat-ink (same-family text). ---- */
+.cat-0 { --c: var(--cat-0); --c-tint: var(--cat-0-tint); --c-text: var(--cat-0-text); }
+.cat-1 { --c: var(--cat-1); --c-tint: var(--cat-1-tint); --c-text: var(--cat-1-text); }
+.cat-2 { --c: var(--cat-2); --c-tint: var(--cat-2-tint); --c-text: var(--cat-2-text); }
+.cat-3 { --c: var(--cat-3); --c-tint: var(--cat-3-tint); --c-text: var(--cat-3-text); }
+.cat-4 { --c: var(--cat-4); --c-tint: var(--cat-4-tint); --c-text: var(--cat-4-text); }
+.cat-5 { --c: var(--cat-5); --c-tint: var(--cat-5-tint); --c-text: var(--cat-5-text); }
+.cat-edge { border-left: 4px solid var(--c, var(--accent)); background: var(--c-tint, var(--accent-weak)); }
+.cat-ink  { color: var(--c-text, var(--accent-ink)); }
+
+/* ---- Icon host: inline-flex + a small negative baseline nudge so an <app-icon> sits centered next to text. ---- */
+app-icon { display: inline-flex; vertical-align: -0.125em; }
+
+/* ---- Loader spin (the only decorative motion allowed — for loaders). ---- */
+@keyframes ui-spin { to { transform: rotate(360deg); } }
+.ui-spin { display: inline-flex; animation: ui-spin .9s linear infinite; }

@@ -1,0 +1,325 @@
+@if (loading()) {
+  <div class="center">Lädt…</div>
+} @else if (error()) {
+  <div class="center">
+    <div class="errbox">
+      <p>{{ error() }}</p>
+      <a routerLink="/"><app-icon name="arrow-left" /> Zurück zur Übersicht</a>
+    </div>
+  </div>
+} @else if (data(); as d) {
+  <div class="rev" [class.panel-collapsed]="!splitMode() && panelCollapsed()">
+    @if (!splitMode()) {
+      <!-- STEADY STATE: document viewer (left) + review form (right). Splitting is launched, not shown here. -->
+      <div class="docpane">
+        <div class="docbar on-chrome">
+          <a routerLink="/" class="back"><app-icon name="arrow-left" /> Übersicht</a>
+          <!-- Nav + exit only. Zoom + rotate live in the viewer pill (over the page). Download serves the ORIGINAL. -->
+          <div class="docbar-tools">
+            <a class="ui-btn ui-btn--secondary ui-btn--sm" [href]="downloadUrl()" [attr.download]="downloadName()"
+               aria-label="Original-PDF herunterladen" title="Original-PDF herunterladen"><app-icon name="download" /> Download</a>
+          </div>
+        </div>
+        <!-- [rotate] passes the reviewer's SAVED (optimistic) orientation so the preview matches what will be filed; the
+             pill's rotate (canRotate) routes back to the document-wide rotateDoc. [pageCountHint] skips a page-count round-trip. -->
+        <app-pdf-pane [docId]="id()" [rotate]="savedRotation()" [pageCountHint]="filePageCount()"
+                      [canRotate]="true" (rotateClick)="rotateDoc()" />
+        <!-- Rotation-save failure, floated just above the pill (where the reviewer is looking); the view has already
+             snapped back to the last-saved angle — this explains why. -->
+        @if (rotationError()) { <div class="rot-error" role="alert">{{ rotationError() }}</div> }
+        <!-- Collapse handle on the seam: hide the form so the document fills the width. Chevron follows the panel —
+             points right (push it away) when visible, left (pull it back) when collapsed. -->
+        <button type="button" class="panel-toggle" (click)="toggleCollapse()"
+                [attr.aria-expanded]="!panelCollapsed()" aria-controls="reviewPanel"
+                [attr.aria-label]="panelCollapsed() ? 'Formular einblenden' : 'Formular ausblenden'">
+          <app-icon [name]="panelCollapsed() ? 'chevron-left' : 'chevron-right'" [size]="18" />
+        </button>
+      </div>
+
+      <!-- The review form (= the SharePoint metadata, pre-filled). Locked + inert while a submit is in flight.
+           Collapsed via CSS (display:none) — the panel is HIDDEN, not destroyed, so typed values survive. -->
+      <div id="reviewPanel" class="formpane" [class.locked]="submitting()" [attr.inert]="submitting() ? '' : null">
+        <h1>Dokument prüfen</h1>
+        <div class="sub">{{ d.payload.original || id() }} · <span class="mono">{{ id() }}</span></div>
+
+        @if (d.payload.reasons.length) {
+          <div class="why">
+            <strong>Warum Prüfung nötig:</strong>
+            <ul>@for (r of d.payload.reasons; track r) { <li>{{ r }}</li> }</ul>
+          </div>
+        }
+
+        @if (supersedeActive()) {
+          <div class="supersede-banner">
+            <strong><app-icon name="undo" /> Ersetzen aktiv:</strong> Dieses Dokument wird abgelegt und ersetzt <b>{{ dupName() }}</b>.
+            Das vorhandene Dokument wird anschließend aus SharePoint <b>entfernt</b> (i. d. R. über den Papierkorb wiederherstellbar).
+          </div>
+        } @else if (d.payload.duplicateOf; as dup) {
+          <div class="why">
+            <strong><app-icon name="copy" /> Mögliches Duplikat:</strong> {{ dup.original || dup.documentId }}
+            — <a [routerLink]="['/compare', id(), dup.documentId]">Seite an Seite vergleichen <app-icon name="arrow-right" /></a>
+          </div>
+        }
+
+        <!-- Business-document toggle (Phase 1): route a non-patient document out of the patient queue into the business
+             holding library in one action. Hides the patient picker + medical fields and relaxes the patient requirement. -->
+        <label class="field biz-toggle">
+          <input type="checkbox" [ngModel]="isBusiness()" (ngModelChange)="setBusiness($event)" />
+          <span><b>Kein Patientendokument (Geschäftsdokument)</b> — wird im Geschäfts-Eingang abgelegt, nicht in den Patientenakten.</span>
+        </label>
+
+        <!-- Zielbereich (business only): the reviewer's functional-area routing decision. REQUIRED — blocks submit until set. -->
+        @if (isBusiness()) {
+          <label class="field">
+            <span class="lbl">Zielbereich <em class="req" title="Pflichtfeld">*</em></span>
+            <select [ngModel]="zielbereich()" (ngModelChange)="zielbereich.set($event)">
+              <option value="">—</option>
+              @for (z of zielbereiche; track z) { <option [value]="z">{{ z }}</option> }
+            </select>
+          </label>
+        }
+
+        <!-- Dokumenttyp is the MEDICAL type catalog — hidden on the business path (the server files it under the
+             configured business content type). -->
+        @if (!isBusiness()) {
+        <label class="field">
+          <span class="lbl">Dokumenttyp
+            @if (uncertain('ContentType')) { <em class="warn">unsicher · {{ pct('ContentType') }}</em> }
+          </span>
+          <select [ngModel]="contentType()" (ngModelChange)="contentType.set($event)">
+            @for (t of d.types; track t) { <option [value]="t">{{ t }}</option> }
+          </select>
+        </label>
+        }
+
+        <!-- patient (hidden for a business document — no patient nexus) -->
+        @if (!isBusiness()) {
+        <div class="field">
+          <span class="lbl">Patient</span>
+          @if (patient(); as p) {
+            <div class="patient">
+              <div class="pcard">
+                <div class="pname">{{ display(p) }}</div>
+                <div class="pmeta">geb. {{ p.birthDate || '—' }} · {{ p.kvnr }} · {{ p.status }}</div>
+              </div>
+              <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" (click)="clearPatient()">Ändern</button>
+            </div>
+          } @else {
+            <div class="search">
+              <input placeholder="Name oder Versichertennummer…"
+                     [ngModel]="query()" (ngModelChange)="query.set($event)" (keyup.enter)="search()" />
+              <button type="button" class="ui-btn ui-btn--secondary" [disabled]="searching()" (click)="search()"><app-icon name="search" /> Suchen</button>
+            </div>
+            @if (candidates().length) {
+              <div class="cands">
+                @for (c of candidates(); track c.listItemId) {
+                  <button class="cand" (click)="choose(c)">
+                    <span class="cn">{{ display(c) }}</span>
+                    <span class="cm">geb. {{ c.birthDate || '—' }} · {{ c.kvnr }} · {{ c.status }}</span>
+                  </button>
+                }
+              </div>
+            } @else if (searching()) { <div class="muted">Suche…</div> }
+          }
+          <div class="compare">
+            Dokument sagt: <b>{{ docName() || '—' }}</b> · geb. {{ docDob() || '—' }} · {{ docKvnr() || '—' }}
+          </div>
+        </div>
+        }
+
+        <!-- identity (business: only the document date; the patient-identity columns are hidden) -->
+        <div class="grid">
+          @for (f of visibleIdentityFields(); track f.col) {
+            <label class="field" [class.warn-field]="uncertain(f.col)">
+              <span class="lbl">{{ f.label }}
+                @if (confidence(f.col) !== null) { <em class="conf" [class.low]="uncertain(f.col)">{{ pct(f.col) }}</em> }
+              </span>
+              @if (f.kind === 'Date') {
+                <app-date-input [value]="val(f.col)" (valueChange)="setValue(f.col, $event)" />
+              } @else {
+                <input type="text" [ngModel]="val(f.col)" (ngModelChange)="setValue(f.col, $event)" />
+              }
+              @if (f.col === 'KVNR' && !kvnrValid()) { <em class="warn">Format: 1 Buchstabe + 9 Ziffern</em> }
+            </label>
+          }
+        </div>
+
+        <!-- type-specific (medical only — a business document files minimal metadata to the holding library) -->
+        @if (!isBusiness() && typeFields().length) {
+          <div class="section">Felder für {{ contentType() }}</div>
+          <div class="grid">
+            @for (f of typeFields(); track f.column) {
+              <label class="field" [class.warn-field]="uncertain(f.column)">
+                <span class="lbl">{{ f.label }}
+                  @if (isRequired(f)) { <em class="req" title="Pflichtfeld">*</em> }
+                  @if (confidence(f.column) !== null) { <em class="conf" [class.low]="uncertain(f.column)">{{ pct(f.column) }}</em> }
+                </span>
+                @switch (f.kind) {
+                  @case ('Choice') {
+                    <select [ngModel]="val(f.column)" (ngModelChange)="setValue(f.column, $event)">
+                      <option value="">—</option>
+                      @for (a of f.allowed; track a) { <option [value]="a">{{ a }}</option> }
+                    </select>
+                  }
+                  @case ('Date') {
+                    <app-date-input [value]="val(f.column)" (valueChange)="setValue(f.column, $event)" />
+                  }
+                  @case ('Bool') {
+                    <select [ngModel]="val(f.column)" (ngModelChange)="setValue(f.column, $event)">
+                      <option value="">—</option><option value="true">Ja</option><option value="false">Nein</option>
+                    </select>
+                  }
+                  @default {
+                    <input type="text" [ngModel]="val(f.column)" (ngModelChange)="setValue(f.column, $event)" />
+                  }
+                }
+              </label>
+            }
+          </div>
+        }
+
+        @if (submitError()) { <div class="errline">{{ submitError() }}</div> }
+
+        <div class="submitbar">
+          <!-- Splitting is a launched secondary action (multi-page only): it takes over the viewer + panel. -->
+          @if (filePageCount() > 1) {
+            <button type="button" class="ui-btn ui-btn--secondary splitlaunch aufteilen" (click)="enterSplit()"><app-icon name="scissors" /> Aufteilen</button>
+          }
+          <a routerLink="/" class="ui-btn ui-btn--ghost btn">Abbrechen</a>
+          <button type="button" class="ui-btn ui-btn--primary submitbtn" [class.btn-replace]="supersedeActive()" [disabled]="!canSubmit()" (click)="submit()">
+            @if (submitting()) { Wird abgelegt… } @else { <app-icon name="check" /> {{ isBusiness() ? 'Als Geschäftsdokument ablegen' : (supersedeActive() ? 'Ablegen & Vorhandenes ersetzen' : 'Prüfen und ablegen') }} }
+          </button>
+        </div>
+        <!-- Rotation persists to the archived page on commit — acknowledge it here (not in the viewer). -->
+        @if (hasRotation()) { <div class="muted hint-sm"><app-icon name="rotate-cw" /> Gedrehte Seiten werden so abgelegt.</div> }
+        @if (isBusiness()) { <div class="muted hint-sm">Wird ohne Patient im Geschäfts-Eingang abgelegt (kein Patientenbezug).</div> }
+        @if (isBusiness() && zielbereich() === '') { <div class="muted hint-sm">Bitte einen Zielbereich (HR / Finance / unklar) wählen.</div> }
+        @if (!isBusiness() && !patient()) { <div class="muted hint-sm">Bitte zuerst einen Patienten auswählen.</div> }
+        @if (!isBusiness() && patient() && !requiredFieldsValid()) { <div class="muted hint-sm">Bitte alle Pflichtfelder (<span class="req">*</span>) ausfüllen.</div> }
+      </div>
+    } @else {
+      <!-- SPLIT MODE: the document pane becomes a thumbnail rail with cut-gaps; the panel becomes the resulting-documents
+           list. The cut model + doSplit are unchanged — each part re-enters the pipeline and gets its OWN review. -->
+      <div class="docpane splitpane" [class.locked]="splitting()" [attr.inert]="splitting() ? '' : null">
+        <div class="docbar on-chrome">
+          <span class="split-title"><app-icon name="scissors" /> Aufteilen · {{ filePageCount() }} Seiten</span>
+          <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" (click)="exitSplit()"><app-icon name="x" /> Abbrechen</button>
+        </div>
+        <div class="splitbody">
+          <!-- Rail = scannable overview + cut placement (NOT for reading): small page tiles tinted per resulting document,
+               with clickable cut-gaps between them. Reading happens in the continuous viewer on the right. -->
+          <div class="rail">
+            @for (p of railPages(); track p) {
+              <button type="button" class="thumb cat-{{ partIndexOf(p) % 6 }}" #railTile
+                      [class.cur]="currentPage() === p" (click)="jumpToPage(p)"
+                      [attr.aria-label]="'Zu Seite ' + p + ' springen'"
+                      [attr.aria-current]="currentPage() === p ? 'true' : null">
+                <img class="thumb-img" [src]="thumb(p)" [alt]="'Seite ' + p" />
+                <span class="thumb-num">{{ p }}</span>
+              </button>
+              @if (p < filePageCount()) {
+                <button type="button" class="cutgap" [class.on]="hasCut(p)" (click)="toggleCut(p)"
+                        [attr.aria-pressed]="hasCut(p)"
+                        [attr.aria-label]="hasCut(p) ? ('Trennung nach Seite ' + p + ' aufheben') : ('Nach Seite ' + p + ' trennen — neues Dokument ab Seite ' + (p + 1))">
+                  <span class="cutgap-line"></span>
+                  <app-icon [name]="hasCut(p) ? 'scissors' : 'plus'" [size]="12" class="cutgap-ico" />
+                  <span class="cutgap-line"></span>
+                </button>
+              }
+            }
+          </div>
+          <!-- Continuous document viewer (scroll across ALL pages), rotation-aware — same component as the review viewer.
+               #viewer + (pageChange) drive the two-way rail sync: tile click jumps it, scrolling highlights the rail. -->
+          <app-pdf-pane #viewer [docId]="id()" [rotate]="savedRotation()" [pageCountHint]="filePageCount()"
+                        [canRotate]="true" (rotateClick)="rotateDoc()" (pageChange)="currentPage.set($event)" />
+          @if (rotationError()) { <div class="rot-error" role="alert">{{ rotationError() }}</div> }
+        </div>
+      </div>
+
+      <div class="formpane" [class.locked]="splitting()" [attr.inert]="splitting() ? '' : null">
+        <h1>Neue Dokumente</h1>
+        <div class="sub">Trennstellen im Dokument setzen — an jeder entsteht ein eigenständiges Dokument. Typ und Patient
+          werden je Dokument in dessen eigener Prüfung gesetzt.</div>
+
+        <div class="newdocs">
+          @for (r of splitRanges(); track $index) {
+            <div class="newdoc cat-{{ $index % 6 }}">
+              <input class="newdoc-name" [value]="nameFor(r, $index)" (input)="setName(r[0], $any($event.target).value)" [attr.aria-label]="'Name für Dokument ' + ($index + 1)" />
+              <div class="newdoc-range">{{ r[0] === r[1] ? 'Seite ' + r[0] : 'Seiten ' + r[0] + '–' + r[1] }} · {{ r[1] - r[0] + 1 }} {{ r[1] - r[0] + 1 === 1 ? 'Seite' : 'Seiten' }}</div>
+            </div>
+          }
+        </div>
+
+        @if (splitError()) { <div class="errline">{{ splitError() }}</div> }
+
+        <div class="submitbar">
+          <button type="button" class="ui-btn ui-btn--ghost btn" (click)="exitSplit()">Abbrechen</button>
+          <button type="button" class="ui-btn ui-btn--primary submitbtn" [disabled]="!canSplit() || splitting()" (click)="doSplit()">
+            @if (splitting()) { Wird aufgeteilt… } @else { <app-icon name="scissors" /> Aufteilen · {{ splitRanges().length }} {{ splitRanges().length === 1 ? 'Dokument' : 'Dokumente' }} }
+          </button>
+        </div>
+        @if (!canSplit()) { <div class="muted hint-sm">Mindestens eine Trennstelle setzen, um in ≥ 2 Dokumente aufzuteilen.</div> }
+      </div>
+    }
+  </div>
+
+  <!-- Duplicate guardrail: compare BOTH documents side by side and confirm in one place — no tab, no navigation -->
+  @if (dupModalOpen()) {
+    <div class="dup-overlay">
+      <div class="dup-head">
+        <div class="dup-head-text">
+          <strong><app-icon name="copy" [size]="16" /> Mögliches Duplikat — bitte vergleichen</strong>
+          <div class="dup-sub">Dieses Dokument ähnelt <b>{{ dupName() }}</b> (gleicher Patient, Typ und Zeitraum).
+            Vergleichen Sie beide, bevor Sie ablegen — sonst entsteht ggf. ein doppelter Eintrag in SharePoint.</div>
+        </div>
+        <div class="dup-head-actions">
+          <button type="button" class="ui-btn ui-btn--secondary ui-btn--sm" (click)="toggleDupDiff()"><app-icon name="columns" /> {{ showDupDiff() ? 'Pixel-Diff aus' : 'Pixel-Diff' }}</button>
+          <button type="button" class="ui-btn ui-btn--secondary ui-btn--sm" (click)="cancelDuplicate()"><app-icon name="x" /> Schließen</button>
+        </div>
+      </div>
+
+      <div class="dup-panes">
+        <div class="dup-pane">
+          <div class="dup-plabel new">Dieses Dokument</div>
+          <app-pdf-pane [docId]="id()" [rotate]="savedRotation()" [pageCountHint]="filePageCount()" />
+        </div>
+        <div class="dup-pane">
+          <div class="dup-plabel">Bereits abgelegt: {{ dupName() }}</div>
+          <app-pdf-pane [docId]="dupId()" [rotate]="dupSavedRotation()" />
+        </div>
+        @if (showDupDiff()) {
+          <div class="dup-pane">
+            <div class="dup-plabel diffl on-chrome">
+              <span>Pixel-Diff <span class="legend"><span class="sw"></span> Unterschied</span></span>
+              <span class="pager">
+                <button type="button" class="ui-icon-btn" (click)="dupDiffPrev()" [disabled]="dupDiffPage() === 1" aria-label="Vorherige Seite"><app-icon name="chevron-left" /></button>
+                Seite {{ dupDiffPage() }}
+                <button type="button" class="ui-icon-btn" (click)="dupDiffNext()" aria-label="Nächste Seite"><app-icon name="chevron-right" /></button>
+              </span>
+            </div>
+            <div class="diffbody"><img [src]="dupDiffSrc()" (error)="onDupDiffError()" alt="Pixel-Diff" /></div>
+          </div>
+        }
+      </div>
+
+      <div class="dup-foot" [class.locked]="submitting()" [attr.inert]="submitting() ? '' : null">
+        <label class="ack">
+          <input type="checkbox" [ngModel]="dupAck()" (ngModelChange)="dupAck.set($event)" />
+          <span>Ich habe beide Dokumente verglichen und bestätige, dass dies ein <b>eigenständiges</b> Dokument ist.</span>
+        </label>
+        <div class="dup-foot-actions">
+          <button type="button" class="ui-btn ui-btn--ghost btn" (click)="cancelDuplicate()">Abbrechen</button>
+          <!-- Supersede right here in the diff viewer — the reviewer sees the better scan and replaces in one click. -->
+          @if (!isBusiness() && dupSupersedable()) {
+            <button type="button" class="ui-btn btn-replace" [disabled]="submitting()" (click)="confirmSupersede()"><app-icon name="undo" /> Vorhandenes ersetzen…</button>
+          } @else if (!isBusiness() && dupSupersedeLegacy()) {
+            <button type="button" class="ui-btn btn-replace" disabled title="Backfill erforderlich: dem vorhandenen Dokument fehlt der SharePoint-Locator (driveItemId).">Ersetzen (Backfill erforderlich)</button>
+          }
+          <button type="button" class="ui-btn ui-btn--primary" [disabled]="!dupAck() || submitting()" (click)="confirmDuplicate()">
+            {{ submitting() ? 'Wird abgelegt…' : 'Geprüft — ablegen' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}

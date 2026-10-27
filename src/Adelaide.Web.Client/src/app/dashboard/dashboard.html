@@ -1,0 +1,114 @@
+<div class="wrap" (dragenter)="onDragEnter($event)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+
+  <!-- PINNED chrome (position:sticky): header + chips + list title + column header stay put while the PAGE scrolls. -->
+  <div class="chrome">
+    <header>
+      <h1>Adelaide — Dokumente</h1>
+      <p>PDFs hochladen — transkribiert, klassifiziert, einem Patienten zugeordnet und abgelegt.
+         Verarbeitung läuft im Hintergrund; Schließen oder Neuladen des Tabs ist sicher.</p>
+    </header>
+
+    @if (selected().length) {
+      <div class="panel">
+        <h2><span>Zum Hochladen bereit</span></h2>
+        @for (f of selected(); track f.name + f.size) {
+          <div class="frow">
+            <span class="name"><app-icon name="file-text" /> {{ f.name }}</span>
+            <span class="meta">{{ kb(f.size) }} KB</span>
+            <button type="button" class="ui-icon-btn" (click)="removeSel(f)" aria-label="Datei aus der Auswahl entfernen"><app-icon name="x" /></button>
+          </div>
+        }
+        <div class="actions">
+          <button type="button" class="ui-btn ui-btn--ghost" (click)="clearSel()">Leeren</button>
+          <button type="button" class="ui-btn ui-btn--primary" [disabled]="uploading()" (click)="submit()">
+            {{ uploading() ? 'Wird verarbeitet…' : 'Verarbeiten' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- .counts is ALWAYS rendered (with a reserved min-height in the CSS) so the band appearing once stats() resolves
+         can't grow the sticky chrome and shove the list down. The @if wraps only the six buttons (they still reference `s`). -->
+    <div class="counts">
+      @if (stats(); as s) {
+        <button type="button" class="cnt total" [class.sel]="scope()==='all'" (click)="setScope('all')">Gesamt <b>{{ s.total }}</b></button>
+        <button type="button" class="cnt ok" [class.sel]="scope()==='Filed'" (click)="setScope('Filed')"><app-icon name="check" /> Abgelegt <b>{{ count('Filed') }}</b></button>
+        <button type="button" class="cnt work" [class.sel]="scope()==='processing'" (click)="setScope('processing')">In Bearbeitung <b>{{ processing() }}</b></button>
+        <button type="button" class="cnt rev" [class.sel]="scope()==='NeedsReview'" (click)="setScope('NeedsReview')"><app-icon name="alert-triangle" /> Prüfung <b>{{ count('NeedsReview') }}</b></button>
+        <button type="button" class="cnt rev" [class.sel]="scope()==='duplicates'" (click)="setScope('duplicates')"><app-icon name="copy" /> Duplikat? <b>{{ s.duplicates ?? 0 }}</b></button>
+        <button type="button" class="cnt err" [class.sel]="scope()==='DeadLetter'" (click)="setScope('DeadLetter')"><app-icon name="x" /> Fehler <b>{{ count('DeadLetter') }}</b></button>
+      }
+    </div>
+
+    <h2 class="listtitle">
+      <span>Dokumente @if (loaded()) { <span class="nofm">{{ visible().length }} von {{ totalForScope() }}</span> }</span>
+      <span class="h2r">
+        <span class="live">@if (live()) { <app-icon name="refresh" /> aktualisiert… }</span>
+        <!-- PRIMARY upload: a real <button> (keyboard: focus + Enter/Space) that opens the native multi-file picker. -->
+        <button class="addbtn" type="button" (click)="fileInput.click()" title="PDFs hochladen" aria-label="PDFs hochladen">
+          <app-icon name="plus" [size]="12" />
+        </button>
+        <input #fileInput type="file" multiple accept="application/pdf" hidden (change)="onFiles(fileInput.files); fileInput.value=''" />
+      </span>
+    </h2>
+
+    <!-- column header — pinned with the chrome, above the window-scrolled rows -->
+    <div class="lgrid lhead"><div>Dokument</div><div>Typ</div><div>Status</div><div>Ablage / Hinweis</div></div>
+  </div>
+
+  <!-- The rows: WINDOW-scrolled virtual scroll — the PAGE is the single scroll container, but only the visible rows are
+       in the DOM (cdk scrollWindow). No inner viewport, no overflow shell, no calc(100vh − chrome). -->
+  @if (visible().length) {
+    <cdk-virtual-scroll-viewport scrollWindow [itemSize]="rowH" class="lviewport">
+      <div class="lgrid vrow" *cdkVirtualFor="let d of visible(); trackBy: trackId">
+        <div class="c-doc">
+          <div class="doc" [title]="d.original || d.documentId">{{ d.original || d.documentId }}</div>
+          <div class="sub">{{ d.documentId }}</div>
+        </div>
+        <div class="c-type">{{ d.contentType || '—' }}</div>
+        <div class="c-state"><span class="pill {{ pillClass(d.state) }}"><span class="dot"></span>{{ pillLabel(d.state) }}</span></div>
+        <div class="c-hint">
+          @let tip = hint(d);
+          @if (actionErrors().get(d.documentId); as msg) {
+            <div class="hint errhint" [title]="msg">{{ msg }}</div>
+          } @else {
+            <div class="hint" [title]="tip">{{ tip }}</div>
+          }
+          <div class="hintactions">
+            @if (d.state === 'Filed') {
+              <a href="#" class="focus-ring" (click)="reclassify(d); $event.preventDefault()">@if (busy().has(d.documentId)) { Wird neu verarbeitet… } @else { <app-icon name="edit" /> Korrigieren }</a>
+              <a href="#" class="focus-ring" (click)="openViewer(d); $event.preventDefault()">Original ansehen</a>
+            } @else if (d.state === 'NeedsReview') {
+              <a class="focus-ring" [routerLink]="['/review', d.documentId]">Prüfen &amp; ablegen <app-icon name="arrow-right" /></a>
+              @if (d.duplicateOf) { <a class="focus-ring" [routerLink]="['/compare', d.documentId, d.duplicateOf]"><app-icon name="copy" /> Vergleichen</a> }
+              @if (canDiscardDup(d)) { <a href="#" class="dngr focus-ring" (click)="discardDup(d); $event.preventDefault()">@if (busy().has(d.documentId)) { Wird verworfen… } @else { <app-icon name="x" /> Als Duplikat verwerfen }</a> }
+              <a href="#" class="focus-ring" (click)="openViewer(d); $event.preventDefault()">Original ansehen</a>
+            } @else if (d.state === 'DuplicateSuspect') {
+              @if (d.duplicateOf) { <a class="focus-ring" [routerLink]="['/compare', d.documentId, d.duplicateOf]"><app-icon name="copy" /> Vergleichen &amp; entscheiden <app-icon name="arrow-right" /></a> }
+              @if (canDiscardDup(d)) { <a href="#" class="dngr focus-ring" (click)="discardDup(d); $event.preventDefault()">@if (busy().has(d.documentId)) { Wird verworfen… } @else { <app-icon name="x" /> Als Duplikat verwerfen }</a> }
+              <a href="#" class="focus-ring" (click)="openViewer(d); $event.preventDefault()">Original ansehen</a>
+            } @else if (d.state === 'DeadLetter') {
+              <a href="#" class="focus-ring" (click)="retry(d); $event.preventDefault()">@if (busy().has(d.documentId)) { Wird neu gestartet… } @else { <app-icon name="refresh" /> Erneut verarbeiten }</a>
+              <a href="#" class="focus-ring" (click)="openViewer(d); $event.preventDefault()">Original ansehen</a>
+            } @else if (d.state === 'Discarded' && d.undiscardable) {
+              <a href="#" class="focus-ring" (click)="undiscard(d); $event.preventDefault()">@if (busy().has(d.documentId)) { Wird wiederhergestellt… } @else { <app-icon name="refresh" /> Wiederherstellen }</a>
+            }
+          </div>
+        </div>
+      </div>
+    </cdk-virtual-scroll-viewport>
+  } @else if (loaded()) {
+    <div class="empty">{{ scope() === 'processing' ? 'Nichts in Bearbeitung — alles abgelegt oder wartet auf Prüfung.' : scope() === 'active' ? 'Keine offenen Dokumente — alle abgelegt oder verworfen.' : 'Noch keine Dokumente.' }}</div>
+  } @else {
+    <!-- initial load in flight: a same-size neutral card (no false-empty text, no shimmer) — reserves the same height as
+         the real empty state so there's no flash and no reverse shift. -->
+    <div class="empty" aria-hidden="true">&nbsp;</div>
+  }
+
+  <!-- SECONDARY upload overlay (position:fixed): invisible at rest, appears only while a FILE is dragged over the app. -->
+  @if (dragDepth() > 0) {
+    <div class="dropoverlay"><div class="dropoverlay-inner"><div class="big"><app-icon name="upload" [size]="32" /></div><div>PDFs hier ablegen</div></div></div>
+  }
+</div>
+
+<app-pdf-viewer [doc]="viewerDoc()" (close)="closeViewer()" (rotated)="onPreviewRotated($event)" />

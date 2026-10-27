@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Adelaide.Core\Adelaide.Core.csproj" />
+    <ProjectReference Include="..\Adelaide.Ai\Adelaide.Ai.csproj" />
+    <ProjectReference Include="..\Adelaide.SharePoint\Adelaide.SharePoint.csproj" />
+    <ProjectReference Include="..\Adelaide.Audit\Adelaide.Audit.csproj" />
+    <ProjectReference Include="..\Adelaide.Demo\Adelaide.Demo.csproj" /><!-- demo-mode adapters; inert unless ADELAIDE_DEMO_MODE=1 -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
+    <PackageReference Include="Azure.Storage.Files.Shares" Version="12.27.0" /><!-- C7': the in-app staging-share poller -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="nClam" Version="8.0.0" /><!-- FINDING 1d: ClamAV client for ingest malware scanning -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.6.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0" />
+    <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.7.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The intake inbox is RUNTIME STATE, not project content. Microsoft.NET.Sdk.Web implicitly globs .json under the
+         project directory as Content with CopyToOutputDirectory=PreserveNewest, so every build would copy review
+         sidecars (which hold PHI) into bin/ — and, through ProjectReference, into Adelaide.Web.Tests's output as well.
+         Nobody wrote that rule; it comes free with the Web SDK. Removing the glob keeps bin/ genuinely disposable. -->
+    <Content Remove="inbox\**" />
+  </ItemGroup>
+
+</Project>

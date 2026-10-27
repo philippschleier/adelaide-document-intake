@@ -1,0 +1,13 @@
+.dwrap {
+  display: flex; align-items: center; gap: .15rem;
+  border: 1px solid var(--border-input); border-radius: 8px; background: var(--ui-card);
+  padding-right: .15rem;
+}
+.dwrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); outline: none; }
+.dwrap.bad { border-color: var(--ui-warn); background: var(--ui-warn-weak); }
+.dwrap input {
+  flex: 1; min-width: 0; border: 0; outline: none; background: transparent;
+  padding: .5rem .6rem; font: inherit;
+}
+.dwrap mat-datepicker-toggle { color: var(--icon-default); }
+.warn { color: var(--ui-warn); font-size: var(--font-caption-size); font-style: normal; }
